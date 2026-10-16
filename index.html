@@ -145,10 +145,34 @@
     display: inline-flex; align-items: baseline;
   }
   .time .d { display: inline-block; min-width: .62em; }
-  .time.masked .d { animation: flick 1.4s steps(1) infinite; color: var(--muted); }
-  .time.masked .d:nth-child(3) { animation-delay: -.5s; }
-  .time.masked .d:nth-child(4) { animation-delay: -1s; }
-  @keyframes flick { 0%, 100% { opacity: .9; } 50% { opacity: .55; } 52% { opacity: .9; } }
+  /* タイムを隠すチョコ */
+  .screen { position: relative; display: inline-block; }
+  .cover {
+    position: absolute; inset: 0 -18px 4px; z-index: 3; pointer-events: none;
+    border-radius: 20px 20px 6px 6px;
+    background:
+      radial-gradient(120% 60% at 30% 10%, rgba(255,255,255,.28), transparent 45%),
+      linear-gradient(180deg, color-mix(in srgb, var(--choco) 80%, #fff) 0%, var(--choco) 35%, color-mix(in srgb, var(--choco) 80%, #000) 100%);
+    transform-origin: top center; transform: scaleY(0); visibility: hidden;
+  }
+  .cover .drips { position: absolute; left: 0; top: calc(100% - 1px); width: 100%; height: 34px; transform-origin: top; }
+  .cover .drips path { fill: color-mix(in srgb, var(--choco) 80%, #000); }
+  .cover .mini {
+    position: absolute; width: 12px; height: 74px; border-radius: 6px; top: -46px;
+    background: linear-gradient(to top, var(--choco) 0 55%, var(--biscuit) 55%);
+    box-shadow: inset -3px 0 0 rgba(0,0,0,.15);
+  }
+  .cover .mini.a { right: 34px; transform: rotate(18deg); }
+  .cover .mini.b { left: 40px; transform: rotate(-24deg); height: 64px; top: -38px; }
+  .cover .mini { opacity: 0; }
+  .cover.on { visibility: visible; animation: pour .55s cubic-bezier(.3,1.4,.5,1) forwards; }
+  .cover.on .drips { animation: ooze .9s .35s ease-out both; }
+  .cover.on .mini { animation: stab .35s .55s cubic-bezier(.2,1.6,.4,1) both; }
+  .cover.off { visibility: visible; transform: scaleY(1); animation: lift .35s ease-in forwards; }
+  @keyframes pour { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes ooze { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes stab { from { opacity: 0; translate: 0 -30px; } to { opacity: 1; translate: 0 0; } }
+  @keyframes lift { from { transform: scaleY(1); opacity: 1; } to { transform: scaleY(0); opacity: .6; } }
   .time .d.rolling { color: var(--muted); filter: blur(1px); }
   .time .d.settle { animation: settle .25s ease-out; }
   @keyframes settle { 0% { transform: translateY(-14px); opacity: .3; } 100% { transform: none; opacity: 1; } }
@@ -245,8 +269,16 @@
       <div class="cue" id="cue"></div>
     </div>
 
-    <div class="time" id="time" aria-live="off">
-      <span class="d">0</span><span class="d">0</span><span>.</span><span class="d">0</span><span class="d">0</span>
+    <div class="screen">
+      <div class="time" id="time" aria-live="off">
+        <span class="d">0</span><span class="d">0</span><span>.</span><span class="d">0</span><span class="d">0</span>
+      </div>
+      <div class="cover" id="cover" aria-hidden="true">
+        <i class="mini a"></i><i class="mini b"></i>
+        <svg class="drips" viewBox="0 0 300 40" preserveAspectRatio="none">
+          <path d="M0,0 H300 V4 C292,4 290,8 290,14 V26 C290,34 274,34 274,26 V14 C274,8 268,4 260,4 H205 C197,4 194,8 194,16 V32 C194,40 176,40 176,32 V16 C176,8 172,4 164,4 H120 C112,4 110,8 110,12 V18 C110,24 98,24 98,18 V12 C98,8 92,4 84,4 H46 C38,4 36,8 36,14 V26 C36,34 20,34 20,26 V14 C20,8 12,4 0,4 Z"/>
+        </svg>
+      </div>
     </div>
     <div class="target">目標 11.11 秒</div>
     <div class="status" id="status">準備ができたらスタート</div>
@@ -274,8 +306,8 @@
 <script>
   const TARGET_CS = 1111; // 11.11秒（センチ秒）
   const MODES = {
-    normal: { name: 'ふつう', hideAt: 3, desc: '3秒たつとタイムが消えます' },
-    oni:    { name: '鬼',     hideAt: 0, desc: 'スタートした瞬間からタイムは見えません' },
+    normal: { name: 'ふつう', hideAt: 3, desc: '3秒たつとチョコがタイムを隠します' },
+    oni:    { name: '鬼',     hideAt: 0, desc: 'GO! の瞬間からチョコで何も見えません' },
   };
   const RANKS = [
     { max: 0,        g: 'P', label: 'PERFECT!!', c: 'var(--gold)' },
@@ -288,7 +320,7 @@
 
   const $ = id => document.getElementById(id);
   const card = $('card'), timeEl = $('time'), btn = $('btn'), statusEl = $('status');
-  const resultEl = $('result'), shareBtn = $('share'), cue = $('cue');
+  const resultEl = $('result'), shareBtn = $('share'), cue = $('cue'), cover = $('cover');
   const digits = timeEl.querySelectorAll('.d');
   const sticks = document.querySelectorAll('.stick');
   const chocos = document.querySelectorAll('.choco');
@@ -359,6 +391,8 @@
     bad:  () => { tone(330, .5, { type: 'sawtooth', gain: .08, to: 160 }); },
     snap: () => { noise(.06, { freq: 4500, q: 3, gain: .5 }); tone(1800, .05, { type: 'square', gain: .07, to: 900 }); },
     flying: () => tone(200, .3, { type: 'square', gain: .1, to: 120 }),
+    pour:  () => { tone(180, .35, { type: 'sine', gain: .2, to: 70 }); noise(.3, { freq: 400, q: 1, gain: .12 }); },
+    lift:  () => tone(300, .25, { type: 'sine', gain: .12, to: 900 }),
   };
 
   // ---------- 表示ヘルパー ----------
@@ -387,7 +421,7 @@
 
   // ---------- ゲーム状態 ----------
   // idle → ready → running → reveal → done
-  let state = 'idle', startAt = 0, raf = 0, readyTimer = 0, lastResult = null;
+  let state = 'idle', startAt = 0, raf = 0, readyTimer = 0, lastResult = null, masked = false;
 
   function setMode(m) {
     data.mode = m; save();
@@ -401,6 +435,7 @@
     resetSticks();
     resultEl.innerHTML = ''; shareBtn.style.display = 'none';
     timeEl.className = 'time'; setDigits(0);
+    masked = false; cover.className = 'cover';
     btn.textContent = 'ストップ'; btn.classList.add('stop');
     statusEl.textContent = 'GO! の合図でスタート…';
     lockModes(true);
@@ -422,11 +457,14 @@
     const cs = Math.max(0, Math.floor((now - startAt) / 10));
     const hideAt = MODES[data.mode].hideAt * 100;
     if (cs >= hideAt) {
-      if (!timeEl.classList.contains('masked')) {
-        timeEl.classList.add('masked');
+      if (!masked) {
+        // チョコの下の数字は止めておく（すき間から覗けないように）
+        masked = true;
+        cover.className = 'cover on';
         card.classList.add('tense');
-        digits.forEach(d => d.textContent = '?');
-        statusEl.textContent = 'ここからは見えない…集中！';
+        sticks.forEach(s => s.classList.remove('wobble')); // 揺れのリズムで数えられないように
+        sfx.pour();
+        statusEl.textContent = 'チョコで見えない…集中！';
       }
     } else {
       setDigits(cs);
@@ -459,7 +497,7 @@
 
   // ドラムロールしながら1桁ずつ確定させる
   function reveal(cs) {
-    timeEl.classList.remove('masked');
+    if (masked) { cover.className = 'cover off'; sfx.lift(); }
     const final = (cs / 100).toFixed(2).padStart(5, '0');
     const finalDigits = [final[0], final[1], final[3], final[4]];
     const ROLL = reduced ? .2 : 1.6;
