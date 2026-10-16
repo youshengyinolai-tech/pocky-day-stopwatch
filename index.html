@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>11.11秒チャレンジ</title>
-<meta name="description" content="11月11日はポッキーの日！ストップウォッチをぴったり11.11秒で止められるか挑戦しよう。">
+<meta name="description" content="11月11日はポッキーの日！見えないタイマーをぴったり11.11秒で止められるか挑戦しよう。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #fff4ec;
@@ -16,16 +16,24 @@
     --choco: #5a2e1c;
     --biscuit: #e9b872;
     --accent: #d93a4a;
+    --gold: #f2b632;
     --ring: rgba(90, 46, 28, .12);
+    --soft: rgba(90, 46, 28, .06);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #1d120d; --card: #2a1a13; --ink: #fbe9dd; --muted: #c4a493;
-      --choco: #7a4128; --biscuit: #e2ae66; --accent: #ff6170; --ring: rgba(255,255,255,.08);
+      --choco: #7a4128; --biscuit: #e2ae66; --accent: #ff6170; --gold: #ffc94a;
+      --ring: rgba(255,255,255,.09); --soft: rgba(255,255,255,.05);
     }
   }
+  :root[data-theme="dark"] {
+    --bg: #1d120d; --card: #2a1a13; --ink: #fbe9dd; --muted: #c4a493;
+    --choco: #7a4128; --biscuit: #e2ae66; --accent: #ff6170; --gold: #ffc94a;
+    --ring: rgba(255,255,255,.09); --soft: rgba(255,255,255,.05);
+  }
   * { box-sizing: border-box; }
-  html, body { margin: 0; }
+  html, body { margin: 0; overflow-x: hidden; }
   body {
     min-height: 100dvh;
     background: var(--bg);
@@ -34,7 +42,25 @@
     display: flex; flex-direction: column; align-items: center;
     padding: 24px 16px 40px;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
   }
+
+  /* 背景のふわふわスティック */
+  .bg-sticks { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .bg-sticks i {
+    position: absolute; width: 10px; height: 160px; border-radius: 5px; opacity: .07;
+    background: linear-gradient(to top, var(--biscuit) 0 22%, var(--choco) 22%);
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { transform: translateY(-30px) rotate(var(--r2)); } }
+
+  .sound {
+    position: fixed; top: 12px; right: 12px; z-index: 5;
+    width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--card); color: var(--ink); box-shadow: 0 0 0 1px var(--ring); font-size: 18px;
+  }
+
+  header, main, section, footer { position: relative; z-index: 1; }
   header { text-align: center; margin-bottom: 16px; }
   .badge {
     display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: .08em;
@@ -47,61 +73,121 @@
   .card {
     width: 100%; max-width: 460px; background: var(--card); border-radius: 28px;
     box-shadow: 0 0 0 1px var(--ring), 0 18px 40px -20px rgba(90,46,28,.35);
-    padding: 28px 20px 24px; text-align: center;
+    padding: 24px 20px; text-align: center; position: relative; overflow: hidden;
+    transition: box-shadow .4s;
+  }
+  .card.tense { box-shadow: 0 0 0 2px var(--accent), 0 18px 50px -16px color-mix(in srgb, var(--accent) 50%, transparent); }
+  .card.shake { animation: shake .5s; }
+  @keyframes shake {
+    20% { transform: translate(-6px, 2px) rotate(-1deg); } 40% { transform: translate(5px, -2px) rotate(1deg); }
+    60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, 0); }
   }
 
-  /* stick */
-  .stick-wrap { height: 230px; display: flex; justify-content: center; align-items: flex-end; margin-bottom: 8px; }
-  .stick { position: relative; width: 26px; height: 220px; }
+  .modes { display: inline-flex; background: var(--soft); border-radius: 999px; padding: 4px; margin-bottom: 14px; }
+  .modes button {
+    border: 0; background: none; font: inherit; font-size: 13px; padding: 6px 14px; border-radius: 999px;
+    color: var(--muted); cursor: pointer;
+  }
+  .modes button[aria-pressed="true"] { background: var(--card); color: var(--ink); font-weight: 800; box-shadow: 0 1px 4px var(--ring); }
+  .modes button:disabled { cursor: default; }
+  .mode-desc { font-size: 12px; color: var(--muted); margin: -6px 0 6px; min-height: 1em; }
+
+  /* スティック */
+  .stage { height: 236px; display: flex; justify-content: center; align-items: flex-end; position: relative; }
+  .sticks { display: flex; gap: 26px; align-items: flex-end; }
+  .stick { position: relative; width: 26px; height: 220px; transition: filter .4s; }
   .stick .base, .stick .choco { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 13px; }
   .stick .base { height: 100%; background: var(--ring); }
   .stick .choco {
-    height: 0%;
-    background: linear-gradient(90deg, var(--choco), color-mix(in srgb, var(--choco) 70%, #fff) 45%, var(--choco));
+    height: 22%;
+    background: linear-gradient(90deg, var(--choco), color-mix(in srgb, var(--choco) 65%, #fff) 40%, var(--choco) 75%);
   }
+  .stick.anim .choco { transition: height 1.3s cubic-bezier(.3,.9,.3,1); }
   .stick .grip {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 22%;
+    position: absolute; left: 0; right: 0; bottom: 0; height: 22%; z-index: 1;
     background: repeating-linear-gradient(0deg, var(--biscuit) 0 8px, color-mix(in srgb, var(--biscuit) 80%, #000) 8px 9px);
-    border-radius: 0 0 13px 13px; z-index: 1;
+    border-radius: 0 0 13px 13px;
   }
-  .sticks { display: flex; gap: 22px; }
+  .stick.gold { filter: drop-shadow(0 0 14px var(--gold)) drop-shadow(0 0 4px var(--gold)); }
+  .stick.snapped .base, .stick.snapped .choco { clip-path: inset(30% 0 0 0); }
+  .stick.wobble { animation: wobble 1.6s ease-in-out infinite; transform-origin: bottom center; }
+  .stick.wobble:nth-child(2) { animation-delay: -.8s; }
+  @keyframes wobble { 50% { transform: rotate(3deg); } }
+  .piece {
+    position: absolute; left: 0; top: 0; width: 26px; height: 30%; border-radius: 13px; z-index: 2;
+    background: linear-gradient(90deg, var(--choco), color-mix(in srgb, var(--choco) 65%, #fff) 40%, var(--choco) 75%);
+    animation: piece 1.1s cubic-bezier(.5,0,.8,.6) forwards;
+  }
+  @keyframes piece {
+    0% { transform: translate(0,0) rotate(0); }
+    25% { transform: translate(10px,-14px) rotate(35deg); }
+    100% { transform: translate(60px, 240px) rotate(200deg); opacity: 0; }
+  }
+  .pokit {
+    position: absolute; top: 20px; left: 50%; font-weight: 800; font-size: 30px; color: var(--accent);
+    transform: translateX(10px) rotate(-12deg); animation: pokit .9s ease-out forwards; pointer-events: none; z-index: 3;
+  }
+  @keyframes pokit { 0% { opacity: 0; transform: translateX(10px) scale(.4) rotate(-12deg); } 30% { opacity: 1; transform: translateX(10px) scale(1.2) rotate(-12deg); } 100% { opacity: 0; transform: translate(20px,-30px) scale(1) rotate(-12deg); } }
 
-  .time {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: clamp(56px, 18vw, 84px); line-height: 1; margin: 8px 0 4px;
-    font-variant-numeric: tabular-nums; transition: opacity .4s;
+  .cue {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 56px; font-weight: 800; color: var(--accent); pointer-events: none; z-index: 4;
+    text-shadow: 0 4px 0 var(--card), 0 0 24px var(--card);
   }
-  .time.hidden { opacity: 0; }
-  .target { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+  .cue.show { animation: cue .7s ease-out forwards; }
+  @keyframes cue { 0% { opacity: 0; transform: scale(2); } 25% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(.9); } }
+
+  /* 時計表示 */
+  .time {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 800;
+    font-size: clamp(60px, 19vw, 88px); line-height: 1; margin: 10px 0 2px;
+    font-variant-numeric: tabular-nums; transition: color .3s, transform .3s;
+    display: inline-flex; align-items: baseline;
+  }
+  .time .d { display: inline-block; min-width: .62em; }
+  .time.masked .d { animation: flick 1.4s steps(1) infinite; color: var(--muted); }
+  .time.masked .d:nth-child(3) { animation-delay: -.5s; }
+  .time.masked .d:nth-child(4) { animation-delay: -1s; }
+  @keyframes flick { 0%, 100% { opacity: .9; } 50% { opacity: .55; } 52% { opacity: .9; } }
+  .time .d.rolling { color: var(--muted); filter: blur(1px); }
+  .time .d.settle { animation: settle .25s ease-out; }
+  @keyframes settle { 0% { transform: translateY(-14px); opacity: .3; } 100% { transform: none; opacity: 1; } }
+  .time.perfect { color: var(--accent); animation: perfectPulse .9s ease-in-out 3; }
+  @keyframes perfectPulse { 50% { transform: scale(1.12); text-shadow: 0 0 24px var(--gold); } }
+  .target { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .status { font-size: 13px; color: var(--muted); min-height: 1.4em; margin-bottom: 10px; }
 
   .btn {
     width: 100%; border: 0; border-radius: 18px; padding: 18px; font: inherit;
     font-size: 22px; font-weight: 800; cursor: pointer; color: #fff; background: var(--accent);
     box-shadow: 0 6px 0 color-mix(in srgb, var(--accent) 65%, #000);
-    transition: transform .06s, box-shadow .06s; touch-action: manipulation;
+    transition: transform .06s, box-shadow .06s, background .2s; touch-action: manipulation; user-select: none;
   }
   .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 65%, #000); }
-  .btn.stop { background: var(--choco); box-shadow: 0 6px 0 color-mix(in srgb, var(--choco) 60%, #000); }
+  .btn.stop { background: var(--choco); box-shadow: 0 6px 0 color-mix(in srgb, var(--choco) 55%, #000); }
+  .btn.wait { opacity: .6; pointer-events: none; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
 
-  .opts { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .opts label {
-    font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
-    box-shadow: inset 0 0 0 1.5px var(--ring); color: var(--muted);
+  /* 結果 */
+  .result { min-height: 128px; margin-top: 18px; display: flex; align-items: center; justify-content: center; gap: 16px; }
+  .stamp {
+    flex: none; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center;
+    font-family: "JetBrains Mono", monospace; font-weight: 800; font-size: 44px;
+    color: var(--c); box-shadow: inset 0 0 0 5px var(--c); transform: rotate(-12deg);
+    animation: stamp .45s cubic-bezier(.2,1.6,.4,1);
   }
-  .opts input { display: none; }
-  .opts input:checked + span { color: var(--ink); }
-  .opts label:has(input:checked) { box-shadow: inset 0 0 0 2px var(--accent); color: var(--ink); }
+  .stamp.small { font-size: 22px; }
+  @keyframes stamp { 0% { transform: scale(3) rotate(-30deg); opacity: 0; } 100% { transform: scale(1) rotate(-12deg); opacity: 1; } }
+  .result .txt { text-align: left; animation: fadeUp .4s .15s both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
+  .result .label { font-size: 24px; font-weight: 800; }
+  .result .diff { font-family: "JetBrains Mono", monospace; font-size: 16px; color: var(--muted); margin-top: 2px; }
+  .result .msg { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .newbest { display: inline-block; font-size: 11px; font-weight: 800; color: #fff; background: var(--gold); border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+  .share { display: none; margin: 4px auto 0; background: none; border: 0; color: var(--accent); font: inherit; font-weight: 800; cursor: pointer; text-decoration: underline; }
 
-  .result { min-height: 92px; margin-top: 18px; }
-  .result .diff { font-family: "JetBrains Mono", monospace; font-size: 18px; color: var(--muted); }
-  .result .rank { font-size: 24px; font-weight: 800; margin: 4px 0; }
-  .result .rank.perfect { color: var(--accent); animation: pop .5s ease; }
-  @keyframes pop { 0% { transform: scale(.6); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
-  .share { display: none; margin: 10px auto 0; background: none; border: 0; color: var(--accent); font: inherit; font-weight: 800; cursor: pointer; text-decoration: underline; }
-
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 20px; }
-  .stat { background: var(--bg); border-radius: 14px; padding: 10px 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; }
+  .stat { background: var(--soft); border-radius: 14px; padding: 10px 4px; }
   .stat b { display: block; font-family: "JetBrains Mono", monospace; font-size: 17px; }
   .stat small { color: var(--muted); font-size: 11px; }
 
@@ -109,39 +195,61 @@
   .history h2 { font-size: 15px; color: var(--muted); margin: 0 0 8px 4px; }
   .history ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
   .history li {
-    display: flex; justify-content: space-between; background: var(--card); border-radius: 12px;
+    display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: 12px;
     padding: 10px 14px; box-shadow: 0 0 0 1px var(--ring); font-family: "JetBrains Mono", monospace; font-size: 15px;
   }
-  .history li span:last-child { color: var(--muted); }
+  .history li .g { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; color: var(--c); box-shadow: inset 0 0 0 2px var(--c); flex: none; }
+  .history li .m { font-family: "M PLUS Rounded 1c", sans-serif; font-size: 11px; color: var(--muted); }
+  .history li .e { margin-left: auto; color: var(--muted); }
 
   footer { margin-top: 28px; font-size: 12px; color: var(--muted); text-align: center; }
 
-  .confetti { position: fixed; top: -20px; width: 8px; height: 40px; border-radius: 4px; pointer-events: none; z-index: 10; animation: fall linear forwards; }
-  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+  /* 紙吹雪（ミニスティック） */
+  .fall {
+    position: fixed; top: -50px; width: 7px; height: 38px; border-radius: 4px; pointer-events: none; z-index: 20;
+    background: linear-gradient(to top, var(--biscuit) 0 24%, var(--cc) 24%);
+    animation: fall linear forwards;
+  }
+  @keyframes fall { to { transform: translate(var(--dx), 115vh) rotate(var(--rot)); } }
+  .flash { position: fixed; inset: 0; background: var(--gold); pointer-events: none; z-index: 19; animation: flash .7s ease-out forwards; }
+  @keyframes flash { from { opacity: .55; } to { opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    .fall, .flash, .piece { display: none; }
+  }
 </style>
 </head>
 <body>
+  <div class="bg-sticks" id="bgSticks" aria-hidden="true"></div>
+  <button class="sound" id="sound" aria-label="サウンド切り替え">🔊</button>
+
   <header>
     <div class="badge">11.11 ポッキーの日</div>
     <h1><span>11.11</span>秒で止めろ！</h1>
-    <p>ぴったり 11.11 秒でストップできるかな？</p>
+    <p>途中でタイムは消える。体内時計だけが頼りだ。</p>
   </header>
 
-  <main class="card">
-    <div class="opts" role="radiogroup" aria-label="難易度">
-      <label><input type="radio" name="mode" value="easy" checked><span>かんたん（ずっと表示）</span></label>
-      <label><input type="radio" name="mode" value="hard"><span>むずかしい（3秒で消える）</span></label>
+  <main class="card" id="card">
+    <div class="modes" role="group" aria-label="難易度">
+      <button data-mode="normal" aria-pressed="true">ふつう</button>
+      <button data-mode="oni" aria-pressed="false">鬼</button>
     </div>
+    <div class="mode-desc" id="modeDesc"></div>
 
-    <div class="stick-wrap" aria-hidden="true">
-      <div class="sticks">
+    <div class="stage">
+      <div class="sticks" id="sticks" aria-hidden="true">
         <div class="stick"><div class="base"></div><div class="choco"></div><div class="grip"></div></div>
         <div class="stick"><div class="base"></div><div class="choco"></div><div class="grip"></div></div>
       </div>
+      <div class="cue" id="cue"></div>
     </div>
 
-    <div class="time" id="time">0.00</div>
+    <div class="time" id="time" aria-live="off">
+      <span class="d">0</span><span class="d">0</span><span>.</span><span class="d">0</span><span class="d">0</span>
+    </div>
     <div class="target">目標 11.11 秒</div>
+    <div class="status" id="status">準備ができたらスタート</div>
 
     <button class="btn" id="btn">スタート</button>
     <div class="hint">スペースキー / Enter でも操作できます</div>
@@ -164,124 +272,375 @@
   <footer>非公式ファンメイドのミニゲームです。</footer>
 
 <script>
-  const TARGET = 11.11;
-  const $ = id => document.getElementById(id);
-  const timeEl = $('time'), btn = $('btn'), resultEl = $('result'), shareBtn = $('share');
-  const chocos = document.querySelectorAll('.choco');
-
-  let running = false, start = 0, raf = 0, lastResult = null;
-
-  const store = {
-    get() { try { return JSON.parse(localStorage.getItem('pocky1111')) || { best: null, tries: 0, perfects: 0, history: [] }; } catch { return { best: null, tries: 0, perfects: 0, history: [] }; } },
-    set(v) { try { localStorage.setItem('pocky1111', JSON.stringify(v)); } catch {} }
+  const TARGET_CS = 1111; // 11.11秒（センチ秒）
+  const MODES = {
+    normal: { name: 'ふつう', hideAt: 3, desc: '3秒たつとタイムが消えます' },
+    oni:    { name: '鬼',     hideAt: 0, desc: 'スタートした瞬間からタイムは見えません' },
   };
-  let data = store.get();
+  const RANKS = [
+    { max: 0,        g: 'P', label: 'PERFECT!!', c: 'var(--gold)' },
+    { max: 5,        g: 'S', label: '神業',      c: 'var(--accent)' },
+    { max: 15,       g: 'A', label: 'すごい！',  c: '#e0713a' },
+    { max: 50,       g: 'B', label: 'いい感じ',  c: '#3a9e6a' },
+    { max: 100,      g: 'C', label: 'おしい…',   c: '#4a7fd0' },
+    { max: Infinity, g: 'D', label: 'ポキッ…',   c: 'var(--muted)' },
+  ];
 
-  const mode = () => document.querySelector('input[name=mode]:checked').value;
+  const $ = id => document.getElementById(id);
+  const card = $('card'), timeEl = $('time'), btn = $('btn'), statusEl = $('status');
+  const resultEl = $('result'), shareBtn = $('share'), cue = $('cue');
+  const digits = timeEl.querySelectorAll('.d');
+  const sticks = document.querySelectorAll('.stick');
+  const chocos = document.querySelectorAll('.choco');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function setSticks(t) {
-    // 2本で 11.11 秒ぶん。1本目 0〜5.555秒、2本目 5.555〜11.11秒でチョコが満ちる
-    const half = TARGET / 2;
-    const p1 = Math.min(t / half, 1), p2 = Math.min(Math.max((t - half) / half, 0), 1);
+  // ---------- 保存 ----------
+  const KEY = 'pocky1111';
+  function load() {
+    const d = { best: {}, tries: 0, perfects: 0, history: [], mode: 'normal', sound: true };
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (s) {
+        Object.assign(d, s);
+        if (typeof s.best !== 'object' || s.best === null) d.best = {};
+        if (!MODES[d.mode]) d.mode = 'normal';
+        d.history = (d.history || []).filter(h => h.g);
+      }
+    } catch {}
+    return d;
+  }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} };
+  let data = load();
+
+  // ---------- サウンド（WebAudioで合成） ----------
+  let ac = null, noiseBuf = null;
+  function audio() {
+    if (!data.sound) return null;
+    if (!ac) {
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+        const ch = noiseBuf.getChannelData(0);
+        for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+      } catch { return null; }
+    }
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  function tone(freq, dur, { type = 'sine', gain = .18, at = 0, to } = {}) {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime + at, o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .02);
+  }
+  function noise(dur, { gain = .2, at = 0, freq = 3000, q = .8, type = 'bandpass' } = {}) {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime + at, s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    s.buffer = noiseBuf; f.type = type; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f).connect(g).connect(a.destination); s.start(t, Math.random() * .5); s.stop(t + dur + .02);
+  }
+  const sfx = {
+    ready: () => tone(523, .12, { type: 'triangle' }),
+    go:    () => { tone(1046, .25, { type: 'triangle', gain: .22 }); noise(.12, { freq: 6000, gain: .08 }); },
+    stop:  () => { noise(.05, { freq: 2500, gain: .3 }); tone(220, .08, { type: 'square', gain: .08 }); },
+    roll:  (dur) => { for (let t = 0; t < dur; t += .045) noise(.04, { at: t, freq: 900, q: 1.5, gain: .05 + .15 * (t / dur) }); },
+    tick:  () => tone(1400, .04, { type: 'square', gain: .05 }),
+    crash: () => noise(1.2, { freq: 7000, type: 'highpass', gain: .18 }),
+    perfect: () => {
+      [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, .5, { type: 'triangle', at: i * .09, gain: .16 }));
+      [1046, 1318, 1568].forEach(f => tone(f, 1.4, { type: 'sine', at: .5, gain: .1 }));
+      sfx.crash();
+    },
+    good: () => { tone(880, .3, { type: 'triangle' }); tone(1318, .5, { type: 'triangle', at: .1 }); },
+    meh:  () => tone(660, .35, { type: 'triangle', gain: .14 }),
+    bad:  () => { tone(330, .5, { type: 'sawtooth', gain: .08, to: 160 }); },
+    snap: () => { noise(.06, { freq: 4500, q: 3, gain: .5 }); tone(1800, .05, { type: 'square', gain: .07, to: 900 }); },
+    flying: () => tone(200, .3, { type: 'square', gain: .1, to: 120 }),
+  };
+
+  // ---------- 表示ヘルパー ----------
+  function setDigits(cs) {
+    const s = (cs / 100).toFixed(2).padStart(5, '0');
+    digits[0].textContent = s[0]; digits[1].textContent = s[1];
+    digits[2].textContent = s[3]; digits[3].textContent = s[4];
+  }
+  function setSticks(cs, animate) {
+    const half = TARGET_CS / 2;
+    const p1 = Math.min(cs / half, 1), p2 = Math.min(Math.max((cs - half) / half, 0), 1);
+    sticks.forEach(s => s.classList.toggle('anim', !!animate));
     chocos[0].style.height = (22 + p1 * 78) + '%';
     chocos[1].style.height = (22 + p2 * 78) + '%';
   }
+  function resetSticks() {
+    sticks.forEach(s => s.classList.remove('gold', 'snapped', 'wobble'));
+    document.querySelectorAll('.piece, .pokit').forEach(e => e.remove());
+    setSticks(0);
+  }
+  function showCue(text) {
+    cue.textContent = text;
+    cue.classList.remove('show'); void cue.offsetWidth; cue.classList.add('show');
+  }
+  function bump(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 
-  function tick() {
-    const t = (performance.now() - start) / 1000;
-    timeEl.textContent = t.toFixed(2);
-    if (mode() === 'hard') timeEl.classList.toggle('hidden', t > 3);
-    setSticks(mode() === 'hard' && t > 3 ? 0 : t);
+  // ---------- ゲーム状態 ----------
+  // idle → ready → running → reveal → done
+  let state = 'idle', startAt = 0, raf = 0, readyTimer = 0, lastResult = null;
+
+  function setMode(m) {
+    data.mode = m; save();
+    document.querySelectorAll('.modes button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+    $('modeDesc').textContent = MODES[m].desc;
+    renderStats();
+  }
+
+  function startReady() {
+    state = 'ready';
+    resetSticks();
+    resultEl.innerHTML = ''; shareBtn.style.display = 'none';
+    timeEl.className = 'time'; setDigits(0);
+    btn.textContent = 'ストップ'; btn.classList.add('stop');
+    statusEl.textContent = 'GO! の合図でスタート…';
+    lockModes(true);
+    showCue('READY'); sfx.ready();
+    const delay = 900 + Math.random() * 700; // 合図のタイミングをばらす
+    readyTimer = setTimeout(go, delay);
+  }
+
+  function go() {
+    state = 'running';
+    startAt = performance.now();
+    showCue('GO!'); sfx.go();
+    statusEl.textContent = '11.11秒だと思ったらストップ！';
+    sticks.forEach(s => s.classList.add('wobble'));
     raf = requestAnimationFrame(tick);
   }
 
-  function rankFor(diff) {
-    if (diff === 0) return ['🎉 PERFECT！ 11.11！', true];
-    if (diff <= 0.03) return ['神ってる！ほぼぴったり', false];
-    if (diff <= 0.1) return ['すごい！あと少し', false];
-    if (diff <= 0.3) return ['いい感じ！', false];
-    if (diff <= 1) return ['おしい…', false];
-    return ['もう一回チャレンジ！', false];
+  function tick(now) {
+    const cs = Math.max(0, Math.floor((now - startAt) / 10));
+    const hideAt = MODES[data.mode].hideAt * 100;
+    if (cs >= hideAt) {
+      if (!timeEl.classList.contains('masked')) {
+        timeEl.classList.add('masked');
+        card.classList.add('tense');
+        digits.forEach(d => d.textContent = '?');
+        statusEl.textContent = 'ここからは見えない…集中！';
+      }
+    } else {
+      setDigits(cs);
+    }
+    raf = requestAnimationFrame(tick);
   }
 
-  function toggle() {
-    if (!running) {
-      running = true;
-      start = performance.now();
-      resultEl.innerHTML = '';
-      shareBtn.style.display = 'none';
-      timeEl.classList.remove('hidden');
-      btn.textContent = 'ストップ';
-      btn.classList.add('stop');
-      raf = requestAnimationFrame(tick);
+  function flying() {
+    clearTimeout(readyTimer);
+    state = 'done';
+    sfx.flying();
+    bump(card, 'shake');
+    showCue('フライング！');
+    statusEl.textContent = 'GO! を待ってから押してね';
+    btn.textContent = 'もう一回'; btn.classList.remove('stop');
+    lockModes(false);
+  }
+
+  function stop(at) {
+    cancelAnimationFrame(raf);
+    const cs = Math.max(0, Math.floor((at - startAt) / 10));
+    state = 'reveal';
+    sfx.stop();
+    card.classList.remove('tense');
+    sticks.forEach(s => s.classList.remove('wobble'));
+    btn.textContent = '判定中…'; btn.classList.remove('stop'); btn.classList.add('wait');
+    statusEl.textContent = 'ドゥルルルル…';
+    reveal(cs);
+  }
+
+  // ドラムロールしながら1桁ずつ確定させる
+  function reveal(cs) {
+    timeEl.classList.remove('masked');
+    const final = (cs / 100).toFixed(2).padStart(5, '0');
+    const finalDigits = [final[0], final[1], final[3], final[4]];
+    const ROLL = reduced ? .2 : 1.6;
+    const settleAt = [.45, .45, .75, 1].map(x => x * ROLL * 1000);
+    const settled = [false, false, false, false];
+    sfx.roll(ROLL);
+    setSticks(cs, true);
+
+    const t0 = performance.now();
+    const iv = setInterval(() => {
+      const el = performance.now() - t0;
+      digits.forEach((d, i) => {
+        if (settled[i]) return;
+        if (el >= settleAt[i]) {
+          settled[i] = true;
+          d.textContent = finalDigits[i];
+          d.classList.remove('rolling'); bump(d, 'settle');
+          if (i >= 1) sfx.tick();
+        } else {
+          d.textContent = Math.floor(Math.random() * 10);
+          d.classList.add('rolling');
+        }
+      });
+      if (settled.every(Boolean)) {
+        clearInterval(iv);
+        setTimeout(() => judge(cs), 200);
+      }
+    }, 50);
+  }
+
+  function judge(cs) {
+    state = 'done';
+    const diff = Math.abs(cs - TARGET_CS);
+    const rank = RANKS.find(r => diff <= r.max);
+    const shown = (cs / 100).toFixed(2);
+    const over = cs > TARGET_CS;
+    const prevBest = data.best[data.mode];
+    const isBest = prevBest === undefined || diff < prevBest;
+
+    let msg;
+    if (diff === 0) msg = '完璧な 11.11 秒！あなたがポッキーの日の主役です';
+    else if (diff <= 5) msg = over ? 'ほんの一瞬だけ遅かった…！' : 'ほんの一瞬だけ早かった…！';
+    else if (diff <= 50) msg = over ? 'ちょっと遅め。もう少し早く！' : 'ちょっと早め。もう少しガマン！';
+    else msg = over ? '待ちすぎてポッキーが折れちゃった' : '焦りすぎてポッキーが折れちゃった';
+
+    resultEl.innerHTML = `
+      <div class="stamp ${rank.g === 'P' ? 'small' : ''}" style="--c:${rank.c}">${rank.g === 'P' ? '11.11' : rank.g}</div>
+      <div class="txt">
+        <div class="label">${rank.label}${isBest && data.tries > 0 ? '<span class="newbest">自己ベスト</span>' : ''}</div>
+        <div class="diff">誤差 ${diff === 0 ? '±0.00' : (over ? '+' : '−') + (diff / 100).toFixed(2)} 秒</div>
+        <div class="msg">${msg}</div>
+      </div>`;
+
+    // 演出
+    if (rank.g === 'P') {
+      timeEl.classList.add('perfect');
+      sticks.forEach(s => s.classList.add('gold'));
+      sfx.perfect(); flash(); rain(80);
+    } else if (rank.g === 'S') {
+      sticks.forEach(s => s.classList.add('gold'));
+      sfx.good(); rain(30);
+    } else if (rank.g === 'A') {
+      sfx.good(); rain(12);
+    } else if (rank.g === 'D') {
+      snap(over ? 1 : (cs > TARGET_CS / 2 ? 1 : 0));
+      sfx.bad();
     } else {
-      cancelAnimationFrame(raf);
-      running = false;
-      const t = Math.floor((performance.now() - start) / 10) / 100;
-      const shown = t.toFixed(2);
-      timeEl.textContent = shown;
-      timeEl.classList.remove('hidden');
-      setSticks(t);
-      btn.textContent = 'もう一回';
-      btn.classList.remove('stop');
+      sfx.meh();
+    }
 
-      const diff = Math.round(Math.abs(t - TARGET) * 100) / 100;
-      const [rank, perfect] = rankFor(diff);
-      const sign = t >= TARGET ? '+' : '−';
-      resultEl.innerHTML = `<div class="diff">誤差 ${diff === 0 ? '±0.00' : sign + diff.toFixed(2)} 秒</div><div class="rank ${perfect ? 'perfect' : ''}">${rank}</div>`;
+    data.tries++;
+    if (diff === 0) data.perfects++;
+    if (isBest) data.best[data.mode] = diff;
+    data.history.unshift({ t: shown, diff, g: rank.g, m: data.mode });
+    data.history = data.history.slice(0, 5);
+    save();
+    renderStats();
 
-      data.tries++;
-      if (perfect) { data.perfects++; confetti(); }
-      if (data.best === null || diff < data.best) data.best = diff;
-      data.history.unshift({ t: shown, diff: diff.toFixed(2) });
-      data.history = data.history.slice(0, 5);
-      store.set(data);
-      render();
+    lastResult = { shown, diff, g: rank.g, mode: data.mode };
+    shareBtn.style.display = 'block';
+    statusEl.textContent = diff === 0 ? '🎉🎉🎉' : 'もう一回いける？';
+    btn.textContent = 'もう一回'; btn.classList.remove('wait');
+    lockModes(false);
+  }
 
-      lastResult = { shown, diff, mode: mode() };
-      shareBtn.style.display = 'block';
+  function snap(i) {
+    const s = sticks[i];
+    setTimeout(() => {
+      s.classList.add('snapped');
+      const p = document.createElement('div'); p.className = 'piece'; s.appendChild(p);
+      const t = document.createElement('div'); t.className = 'pokit'; t.textContent = 'ポキッ！';
+      document.querySelector('.stage').appendChild(t);
+      sfx.snap(); bump(card, 'shake');
+    }, 250);
+  }
+
+  function flash() {
+    if (reduced) return;
+    const f = document.createElement('div'); f.className = 'flash';
+    document.body.appendChild(f); setTimeout(() => f.remove(), 800);
+  }
+
+  function rain(n) {
+    if (reduced) return;
+    const colors = ['var(--choco)', '#f49ab0', '#7cc28a', '#ffffff', '#c9a0dc'];
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'fall';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.setProperty('--cc', colors[i % colors.length]);
+      c.style.setProperty('--dx', (Math.random() * 120 - 60) + 'px');
+      c.style.setProperty('--rot', (Math.random() * 900 - 450) + 'deg');
+      c.style.animationDuration = 1.8 + Math.random() * 1.8 + 's';
+      c.style.animationDelay = Math.random() * .6 + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4500);
     }
   }
 
-  function render() {
-    $('best').textContent = data.best === null ? '--' : data.best.toFixed(2);
+  function lockModes(lock) { document.querySelectorAll('.modes button').forEach(b => b.disabled = lock); }
+
+  function renderStats() {
+    const b = data.best[data.mode];
+    $('best').textContent = b === undefined ? '--' : (b / 100).toFixed(2);
     $('tries').textContent = data.tries;
     $('perfects').textContent = data.perfects;
     $('history').innerHTML = data.history.length
-      ? data.history.map(h => `<li><span>${h.t} 秒</span><span>誤差 ${h.diff}</span></li>`).join('')
-      : '<li><span>まだ記録がありません</span><span></span></li>';
+      ? data.history.map(h => {
+          const r = RANKS.find(r => r.g === h.g);
+          return `<li><span class="g" style="--c:${r.c}">${h.g}</span><span>${h.t} 秒</span><span class="m">${MODES[h.m] ? MODES[h.m].name : ''}</span><span class="e">誤差 ${(h.diff / 100).toFixed(2)}</span></li>`;
+        }).join('')
+      : '<li><span class="m">まだ記録がありません</span></li>';
   }
 
-  function confetti() {
-    const colors = ['#5a2e1c', '#e9b872', '#d93a4a', '#f7a8b8'];
-    for (let i = 0; i < 40; i++) {
-      const c = document.createElement('div');
-      c.className = 'confetti';
-      c.style.left = Math.random() * 100 + 'vw';
-      c.style.background = colors[i % colors.length];
-      c.style.animationDuration = 1.5 + Math.random() * 1.5 + 's';
-      c.style.animationDelay = Math.random() * .4 + 's';
-      document.body.appendChild(c);
-      setTimeout(() => c.remove(), 3500);
-    }
+  // ---------- 入力 ----------
+  function action(at) {
+    if (state === 'idle' || state === 'done') startReady();
+    else if (state === 'ready') flying();
+    else if (state === 'running') stop(at);
   }
-
-  btn.addEventListener('click', e => { if (e.detail !== 0) toggle(); }); // キーボード由来のclickは keydown 側で処理
+  // pointerdown で押した瞬間の時刻を使う（クリックより反応が速い）
+  btn.addEventListener('pointerdown', e => { if (e.button === 0) action(e.timeStamp); });
+  btn.addEventListener('click', e => e.preventDefault());
   document.addEventListener('keydown', e => {
     if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) {
+      if (e.target.closest && e.target.closest('.modes, .sound, .share')) return;
       e.preventDefault();
-      toggle();
+      action(e.timeStamp);
     }
   });
+
+  document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  const soundBtn = $('sound');
+  const renderSound = () => soundBtn.textContent = data.sound ? '🔊' : '🔇';
+  soundBtn.addEventListener('click', () => { data.sound = !data.sound; save(); renderSound(); });
+
   shareBtn.addEventListener('click', () => {
     if (!lastResult) return;
-    const m = lastResult.mode === 'hard' ? '（むずかしいモード）' : '';
-    const text = `11.11秒チャレンジ${m}で ${lastResult.shown} 秒！誤差 ${lastResult.diff.toFixed(2)} 秒 #ポッキーの日 #1111`;
+    const r = lastResult;
+    const head = r.g === 'P' ? '【PERFECT】ぴったり11.11秒で止めた！' : `11.11秒チャレンジ ランク${r.g}`;
+    const text = `${head}\n記録 ${r.shown} 秒（誤差 ${(r.diff / 100).toFixed(2)} 秒）／${MODES[r.mode].name}モード\n#ポッキーの日 #1111`;
     window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(location.href), '_blank');
   });
 
-  setSticks(0);
-  render();
+  // 背景スティック
+  const bg = $('bgSticks');
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('i');
+    const r = Math.random() * 60 - 30;
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.top = Math.random() * 100 + 'vh';
+    s.style.transform = `rotate(${r}deg)`;
+    s.style.setProperty('--r2', (r + 8) + 'deg');
+    s.style.animationDelay = -Math.random() * 14 + 's';
+    bg.appendChild(s);
+  }
+
+  setMode(data.mode);
+  renderSound();
+  resetSticks();
 </script>
 </body>
 </html>
