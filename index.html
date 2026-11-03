@@ -95,18 +95,29 @@
   .center.j-blur { filter: blur(6px); }
   .center.j-flip { transform: scaleX(-1); }
 
-  /* スティック */
-  .stick { position: relative; width: clamp(26px, 3.2vw, 54px); height: min(50vh, 480px); flex: none; }
-  .stick .base, .stick .choco { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 999px; }
-  .stick .base { height: 100%; background: rgba(0,0,0,.18); box-shadow: inset 0 0 0 1.5px rgba(255,241,220,.12); }
+  /* スティック：プレッツェルの棒にチョコがコーティングされていく */
+  .stick {
+    position: relative; width: clamp(14px, 1.2vw, 22px); height: min(52vh, 500px); flex: none;
+    filter: drop-shadow(8px 14px 10px rgba(50,0,0,.35)); transition: filter .4s;
+  }
+  .stick .base, .stick .choco { position: absolute; left: 0; right: 0; bottom: 0; }
+  .stick .base, .stick .grip {
+    background: linear-gradient(90deg, #b5753a 0%, #dea45d 22%, #f5d09a 40%, #e6b26c 58%, #c2803f 85%, #a3672f 100%);
+  }
+  .stick .base { height: 100%; border-radius: 999px 999px 3px 3px; }
   .stick .choco {
-    height: 22%;
-    background: linear-gradient(90deg, var(--choco), var(--choco-l) 38%, #9a5636 46%, var(--choco) 78%);
+    height: 20%; border-radius: 999px 999px 3px 3px;
+    background: linear-gradient(90deg, #1c0904 0%, #3d180c 18%, #6a3520 33%, #a3694b 41%, #5b2b18 50%, #36150a 75%, #1a0803 100%);
+  }
+  .stick .choco::after {
+    content: ""; position: absolute; left: 33%; width: 12%; top: 2%; bottom: 6%; border-radius: 999px;
+    background: linear-gradient(to bottom, rgba(255,232,212,.5), rgba(255,232,212,.1) 55%, transparent);
   }
   .stick.anim .choco { transition: height 1.3s cubic-bezier(.3,.9,.3,1); }
+  /* 持ち手：上端をギザっとさせてチョコの付け際に見せる */
   .stick .grip {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 22%; z-index: 1; border-radius: 0 0 999px 999px;
-    background: repeating-linear-gradient(0deg, var(--biscuit) 0 10px, #d9a35e 10px 11px);
+    position: absolute; left: 0; right: 0; bottom: 0; height: 22%; z-index: 1; border-radius: 0 0 3px 3px;
+    clip-path: polygon(0 3%, 18% 1.2%, 40% 4%, 62% 0, 82% 2.6%, 100% 1%, 100% 100%, 0 100%);
   }
   .stick.gold { filter: drop-shadow(0 0 22px var(--gold)) drop-shadow(0 0 6px var(--gold)); }
   .stick.wobble { animation: wobble 1.6s ease-in-out infinite; transform-origin: bottom center; }
@@ -114,22 +125,21 @@
   @keyframes wobble { 50% { transform: rotate(2.5deg); } }
 
   /* チョコが溶け落ちる（D判定） */
-  .stick .base { transition: background .9s .3s; }
-  .stick.melt .base { background: linear-gradient(90deg, #d9a35e, var(--biscuit) 40%, #f6d39c 48%, #d9a35e 80%); box-shadow: none; }
-  .stick.melt .choco { transition: height 1.6s cubic-bezier(.55,0,.75,1); }
+  .stick.melt .choco { transition: height 2s cubic-bezier(.55,0,.75,1); }
   .stick .puddle {
-    position: absolute; left: 50%; bottom: -8px; height: 16px; width: 0; translate: -50% 0; z-index: 0;
-    border-radius: 50%; background: radial-gradient(60% 50% at 40% 40%, var(--choco-l), var(--choco) 70%);
-    transition: width 1.6s .2s cubic-bezier(.3,.8,.4,1);
+    position: absolute; left: 50%; bottom: -5px; height: 11px; width: 0; translate: -50% 0; z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(50% 50% at 42% 32%, #94573a, #3a170b 62%, #1c0904);
+    transition: width 2s .4s cubic-bezier(.3,.8,.4,1);
   }
-  .stick.melt .puddle { width: 260%; }
+  .stick.melt .puddle { width: 560%; }
   .drop {
-    position: absolute; left: 50%; width: 46%; aspect-ratio: 1 / 1.35; translate: -50% 0; z-index: 2;
-    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
-    background: linear-gradient(90deg, var(--choco), var(--choco-l) 45%, var(--choco));
-    animation: drip var(--d, 1s) cubic-bezier(.6,0,.9,.7) both;
+    position: absolute; left: 50%; width: 64%; aspect-ratio: 1 / 2.8; translate: -50% 0; z-index: 2;
+    border-radius: 50% 50% 50% 50% / 28% 28% 72% 72%;
+    background: linear-gradient(90deg, #2a0f06, #7a4128 40%, #3a170b);
+    animation: drip var(--d, 1.4s) cubic-bezier(.55,0,.8,.8) both;
   }
-  @keyframes drip { 0% { scale: .3; opacity: 0; } 25% { scale: 1; opacity: 1; } 92% { opacity: 1; } 100% { top: 96%; scale: 1.3 .5; opacity: 0; } }
+  @keyframes drip { 0% { opacity: 0; scale: .6 .3; } 15% { opacity: 1; scale: 1; } 88% { opacity: 1; } 100% { top: 94%; opacity: 0; scale: 1.3 .5; } }
 
   /* タイム */
   .screen { position: relative; font-size: min(12vw, 28vh); flex: none; }
@@ -549,8 +559,8 @@
     const half = TARGET_CS / 2;
     const p1 = Math.min(cs / half, 1), p2 = Math.min(Math.max((cs - half) / half, 0), 1);
     sticks.forEach(s => s.classList.toggle('anim', !!animate));
-    chocos[0].style.height = (22 + p1 * 78) + '%';
-    chocos[1].style.height = (22 + p2 * 78) + '%';
+    chocos[0].style.height = (20 + p1 * 80) + '%';
+    chocos[1].style.height = (20 + p2 * 80) + '%';
   }
   function resetSticks() {
     sticks.forEach(s => s.classList.remove('gold', 'melt', 'wobble'));
@@ -869,18 +879,18 @@
   function melt() {
     setTimeout(() => {
       sticks.forEach((s, i) => {
-        const top = 100 - parseFloat(chocos[i].style.height || '22');
+        const top = 100 - parseFloat(chocos[i].style.height || '20');
         const puddle = document.createElement('div'); puddle.className = 'puddle';
         s.appendChild(puddle);
         void puddle.offsetWidth;
         s.classList.add('melt');
         chocos[i].style.height = '0%';
         if (reduced) return;
-        for (let k = 0; k < 4; k++) {
+        for (let k = 0; k < 2; k++) {
           const d = document.createElement('div'); d.className = 'drop';
-          d.style.top = Math.min(top + k * 6, 70) + '%';
-          d.style.setProperty('--d', rand(.8, 1.3) + 's');
-          d.style.animationDelay = (k * .28 + i * .12) + 's';
+          d.style.top = Math.min(top + 2 + k * 10, 70) + '%';
+          d.style.setProperty('--d', rand(1.3, 1.8) + 's');
+          d.style.animationDelay = (k * .5 + i * .2) + 's';
           s.appendChild(d);
         }
       });
