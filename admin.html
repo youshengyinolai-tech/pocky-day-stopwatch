@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>11.11秒チャレンジ 管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=JetBrains+Mono:wght@500;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #b8141f; --red-d: #7d0b14; --cream: #fff1dc; --cream-d: #f3dcb8; --choco: #4b2317;
+    --gold: #f2c14e; --ink: #2b100a; --green: #1e7f4f; --line: rgba(43,16,10,.18);
+    --display: "Dela Gothic One", sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cream); color: var(--ink); font-family: "Zen Kaku Gothic New", system-ui, sans-serif; font-size: 15px; line-height: 1.6; }
+  header { background: var(--red); color: var(--cream); padding: 14px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; position: sticky; top: 0; z-index: 5; }
+  header h1 { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 0; }
+  header h1 b { color: var(--gold); font-weight: 400; }
+  header .who { margin-left: auto; font-size: 13px; opacity: .9; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 80px; }
+  nav { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+  nav button { flex: 1; min-width: 120px; }
+  button { font: inherit; font-weight: 700; border: 2px solid var(--ink); background: #fff; color: var(--ink); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+  button:hover:not(:disabled) { background: var(--ink); color: var(--cream); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primary { background: var(--red); border-color: var(--red); color: #fff; }
+  button.primary:hover:not(:disabled) { background: var(--red-d); border-color: var(--red-d); }
+  button.danger { border-color: var(--red); color: var(--red); }
+  button.danger:hover:not(:disabled) { background: var(--red); color: #fff; }
+  button.small { padding: 3px 10px; font-size: 13px; border-width: 1.5px; }
+  nav button[aria-selected="true"] { background: var(--ink); color: var(--cream); }
+  section { display: none; }
+  section.on { display: block; }
+  .card { background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 4px; }
+  .card p.note { margin: 0 0 14px; font-size: 13px; opacity: .7; }
+  label { display: block; font-weight: 700; font-size: 13px; margin: 10px 0 4px; }
+  input, textarea, select { font: inherit; width: 100%; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 6px; background: #fffaf2; color: var(--ink); }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--red); border-color: transparent; }
+  textarea { min-height: 150px; font-family: var(--mono); font-size: 13px; line-height: 1.7; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 14px; }
+  .rank-row { display: grid; grid-template-columns: 44px 1fr 120px; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .rank-row .g { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); background: var(--bg); color: var(--fg); }
+  .rank-row .sec { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 13px; }
+  .rank-row .sec input { text-align: right; }
+  .range { font-family: var(--mono); font-size: 12px; opacity: .65; grid-column: 2 / -1; margin-top: -4px; }
+  .bar { position: sticky; bottom: 0; background: var(--cream); padding: 12px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-top: 2px solid var(--ink); }
+  .bar .msg { font-size: 13px; }
+  .bar .msg.ok { color: var(--green); font-weight: 700; }
+  .bar .msg.err { color: var(--red); font-weight: 700; }
+  .tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .tools select { width: auto; }
+  .tools .count { margin-left: auto; font-size: 13px; opacity: .7; }
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; }
+  th, td { padding: 7px 6px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  th { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 12px; opacity: .6; }
+  td.num { text-align: right; }
+  .table-wrap { overflow-x: auto; }
+  .pill { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-weight: 800; background: var(--bg); color: var(--fg); }
+  .gate { max-width: 460px; margin: 60px auto; text-align: center; }
+  .gate h2 { font-family: var(--display); font-weight: 400; }
+  .gate p { opacity: .75; }
+  .warn { background: #fff4d6; border: 2px dashed var(--red); padding: 14px; border-radius: 10px; text-align: left; font-size: 14px; }
+  code { font-family: var(--mono); background: var(--cream-d); padding: 1px 5px; border-radius: 4px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1><b>11.11</b>秒チャレンジ 管理</h1>
+  <span class="who" id="who"></span>
+  <button class="small" id="logout" hidden>ログアウト</button>
+</header>
+
+<main>
+  <div class="gate" id="gate">
+    <h2>管理者ログイン</h2>
+    <p>登録された Google アカウントでログインすると、ランキングの削除や設定の変更ができます。</p>
+    <button class="primary" id="login">Google でログイン</button>
+    <p class="warn" id="gateMsg" hidden></p>
+  </div>
+
+  <div id="panel" hidden>
+    <nav role="tablist">
+      <button role="tab" data-tab="scores" aria-selected="true">ランキング</button>
+      <button role="tab" data-tab="ranks" aria-selected="false">判定</button>
+      <button role="tab" data-tab="jama" aria-selected="false">お邪魔</button>
+      <button role="tab" data-tab="texts" aria-selected="false">表示テキスト</button>
+    </nav>
+
+    <section id="tab-scores" class="on">
+      <div class="card">
+        <h2>記録一覧</h2>
+        <p class="note">ゲームで出た記録がリアルタイムに表示されます。削除するとゲーム画面のランキングからもすぐ消えます。</p>
+        <div class="tools">
+          <select id="fMode"><option value="">全モード</option><option value="normal">ふつう</option><option value="oni">鬼</option></select>
+          <select id="fSort"><option value="diff">誤差が小さい順</option><option value="at">新しい順</option></select>
+          <span class="count" id="count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>順位</th><th>日時</th><th>タイム</th><th>誤差</th><th>判定</th><th>モード</th><th>お邪魔</th><th></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>まとめて削除</h2>
+        <p class="note">本番前のテスト記録の掃除などに。元に戻せません。</p>
+        <button class="danger" id="wipe">全記録を削除</button>
+      </div>
+    </section>
+
+    <section id="tab-ranks">
+      <div class="card">
+        <h2>判定の範囲</h2>
+        <p class="note">11.11 秒からのズレ（秒）。早くても遅くても同じ扱いです。表示名も変えられます。</p>
+        <div id="rankRows"></div>
+      </div>
+    </section>
+
+    <section id="tab-jama">
+      <div class="card">
+        <h2>お邪魔の頻度</h2>
+        <p class="note">次のお邪魔が出るまでの間隔（秒）。この範囲からランダムに選ばれます。短いほど激しくなります。</p>
+        <div class="grid">
+          <div><label>「あり」最短</label><input type="number" step="0.1" min="0.1" id="jnMin"></div>
+          <div><label>「あり」最長</label><input type="number" step="0.1" min="0.1" id="jnMax"></div>
+          <div><label>「地獄」最短</label><input type="number" step="0.1" min="0.1" id="jhMin"></div>
+          <div><label>「地獄」最長</label><input type="number" step="0.1" min="0.1" id="jhMax"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>偽の通知</h2>
+        <p class="note">1行に1件。<code>アイコン | アプリ名 | 差出人 | 本文 | 色</code>（色は省略可）</p>
+        <textarea id="toasts" rows="14"></textarea>
+      </div>
+      <div class="card">
+        <h2>ウソの声かけ</h2>
+        <p class="note">1行に1件。画面に大きく出て、半分くらいの確率で読み上げられます。</p>
+        <textarea id="lies" rows="8"></textarea>
+      </div>
+      <div class="card">
+        <h2>店内放送</h2>
+        <p class="note">1行に1件。チャイムのあと帯で流れて、読み上げられます。</p>
+        <textarea id="announce" rows="6"></textarea>
+      </div>
+    </section>
+
+    <section id="tab-texts">
+      <div class="card">
+        <h2>表示テキスト</h2>
+        <p class="note">ゲーム画面の見出し・レシート・シェア文に使われます。</p>
+        <label for="tTitle">タイトル（「11.11」は自動で強調）</label><input id="tTitle">
+        <label for="tStore">生協名</label><input id="tStore">
+        <label for="tOrg">団体名</label><input id="tOrg">
+        <label for="tNotice">お知らせ（レシート上部に表示。空欄なら非表示）</label><textarea id="tNotice" rows="3" style="min-height:80px"></textarea>
+      </div>
+    </section>
+
+    <div class="bar" id="saveBar" hidden>
+      <button class="primary" id="saveBtn">保存してゲームに反映</button>
+      <button id="resetBtn">初期値に戻す</button>
+      <span class="msg" id="saveMsg"></span>
+    </div>
+  </div>
+</main>
+
+<script src="defaults.js"></script>
+<script src="firebase-config.js"></script>
+<script type="module">
+  const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const D = window.POCKY_DEFAULTS;
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const RANK_STYLE = {
+    P: ['#f2c14e', '#2b100a'], S: ['#2b100a', '#f2c14e'], A: ['#fff1dc', '#b8141f'],
+    B: ['#fff1dc', '#4b2317'], C: ['#f3dcb8', '#4b2317'], D: ['#7d0b14', '#fff1dc'],
+  };
+  const MODE = { normal: 'ふつう', oni: '鬼' };
+  const JAMA = ['なし', 'あり', '地獄'];
+
+  function gate(msg) {
+    $('gateMsg').innerHTML = msg; $('gateMsg').hidden = !msg;
+  }
+
+  if (!window.FIREBASE_CONFIG) {
+    $('login').disabled = true;
+    gate('Firebase がまだ設定されていません。<code>firebase-config.js</code> に設定を貼ってください（手順は README）。');
+    throw new Error('no config');
+  }
+
+  const { initializeApp } = await import(SDK + 'firebase-app.js');
+  const A = await import(SDK + 'firebase-auth.js');
+  const F = await import(SDK + 'firebase-firestore.js');
+  const app = initializeApp(window.FIREBASE_CONFIG);
+  const auth = A.getAuth(app);
+  const db = F.getFirestore(app);
+  const cfgRef = F.doc(db, 'config', 'main');
+
+  // ---------- ログイン ----------
+  const provider = new A.GoogleAuthProvider();
+  $('login').onclick = async () => {
+    try { await A.signInWithPopup(auth, provider); }
+    catch (e) {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') A.signInWithRedirect(auth, provider);
+      else gate('ログインできませんでした：' + esc(e.code || e.message));
+    }
+  };
+  $('logout').onclick = () => A.signOut(auth);
+
+  let unsubs = [];
+  A.onAuthStateChanged(auth, async user => {
+    unsubs.forEach(f => f()); unsubs = [];
+    $('who').textContent = user ? user.email : '';
+    $('logout').hidden = !user;
+    if (!user) { $('gate').hidden = false; $('panel').hidden = true; return; }
+    // 管理者かどうかは Firestore のルールが判定する。設定への書き込み権限で確かめる
+    try {
+      await F.setDoc(F.doc(db, 'config', 'ping'), { by: user.email, at: F.serverTimestamp() });
+    } catch {
+      gate(`<b>${esc(user.email)}</b> は管理者として登録されていません。Firestore のルールに追加してください。`);
+      $('gate').hidden = false; $('panel').hidden = true; return;
+    }
+    gate('');
+    $('gate').hidden = true; $('panel').hidden = false;
+    startScores(); startConfig();
+  });
+
+  // ---------- タブ ----------
+  let tab = 'scores';
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+    document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === 'tab-' + tab));
+    $('saveBar').hidden = tab === 'scores';
+  });
+
+  // ---------- 記録 ----------
+  let scores = [];
+  function startScores() {
+    const q = F.query(F.collection(db, 'scores'), F.orderBy('at', 'desc'), F.limit(2000));
+    unsubs.push(F.onSnapshot(q, snap => {
+      scores = snap.docs.map(d => {
+        const v = d.data({ serverTimestamps: 'estimate' });
+        return { id: d.id, ...v, at: v.at ? v.at.toDate() : new Date() };
+      });
+      renderScores();
+    }, e => { $('rows').innerHTML = `<tr><td colspan="8">読み込めませんでした：${esc(e.code)}</td></tr>`; }));
+  }
+  function gradeOf(diff) {
+    const r = currentRanks();
+    return (r.find(x => x.g === 'P' ? diff === 0 : x.g === 'D' || diff <= x.max)).g;
+  }
+  function renderScores() {
+    const m = $('fMode').value, sort = $('fSort').value;
+    let list = scores.filter(s => !m || s.mode === m);
+    if (sort === 'diff') list = [...list].sort((a, b) => a.diff - b.diff || a.at - b.at);
+    $('count').textContent = `${list.length} 件`;
+    const fmt = d => `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+    $('rows').innerHTML = list.length ? list.map((s, i) => {
+      const g = gradeOf(s.diff), [bg, fg] = RANK_STYLE[g];
+      return `<tr><td class="num">${sort === 'diff' ? i + 1 : ''}</td><td>${fmt(s.at)}</td><td class="num">${(s.cs / 100).toFixed(2)}</td><td class="num">±${(s.diff / 100).toFixed(2)}</td>
+        <td><span class="pill" style="--bg:${bg};--fg:${fg}">${g}</span></td><td>${MODE[s.mode] || esc(s.mode)}</td><td>${JAMA[s.jama] ?? ''}</td>
+        <td><button class="small danger" data-del="${esc(s.id)}">削除</button></td></tr>`;
+    }).join('') : '<tr><td colspan="8" style="text-align:center;opacity:.6;padding:20px">記録はまだありません</td></tr>';
+  }
+  $('fMode').onchange = renderScores;
+  $('fSort').onchange = renderScores;
+  $('rows').onclick = async e => {
+    const id = e.target.dataset && e.target.dataset.del;
+    if (!id) return;
+    const s = scores.find(x => x.id === id);
+    if (!confirm(`${(s.cs / 100).toFixed(2)} 秒（${MODE[s.mode] || ''}）の記録を削除しますか？`)) return;
+    e.target.disabled = true;
+    try { await F.deleteDoc(F.doc(db, 'scores', id)); }
+    catch (err) { alert('削除できませんでした：' + err.code); e.target.disabled = false; }
+  };
+  $('wipe').onclick = async () => {
+    if (!scores.length) return alert('記録はありません');
+    if (!confirm(`全 ${scores.length} 件の記録を削除します。元に戻せません。`)) return;
+    if (prompt('確認のため「削除」と入力してください') !== '削除') return;
+    $('wipe').disabled = true;
+    try {
+      // 一度に消せるのは 500 件まで
+      const ids = scores.map(s => s.id);
+      for (let i = 0; i < ids.length; i += 400) {
+        const b = F.writeBatch(db);
+        ids.slice(i, i + 400).forEach(id => b.delete(F.doc(db, 'scores', id)));
+        await b.commit();
+      }
+    } catch (err) { alert('削除できませんでした：' + err.code); }
+    $('wipe').disabled = false;
+  };
+
+  // ---------- 設定 ----------
+  $('rankRows').innerHTML = D.ranks.map(r => {
+    const [bg, fg] = RANK_STYLE[r.g];
+    const sec = r.g === 'P' ? '<span>ぴったりのみ</span>'
+      : r.g === 'D' ? '<span>それ以外</span>'
+      : `<span>±</span><input type="number" step="0.01" min="0" id="max-${r.g}"><span>秒</span>`;
+    return `<div class="rank-row"><span class="g" style="--bg:${bg};--fg:${fg}">${r.g}</span><input id="label-${r.g}" aria-label="${r.g} の表示名"><span class="sec">${sec}</span><span class="range" id="range-${r.g}"></span></div>`;
+  }).join('');
+
+  function currentRanks() {
+    return D.ranks.map(r => ({ g: r.g, label: $('label-' + r.g).value.trim() || r.label, max: r.max === undefined ? undefined : Math.round(parseFloat($('max-' + r.g).value) * 100) }));
+  }
+  function renderRanges() {
+    const rs = currentRanks();
+    const t = cs => (cs / 100).toFixed(2);
+    let prev = 0;
+    rs.forEach(r => {
+      let txt;
+      if (r.g === 'P') txt = '11.11';
+      else if (r.g === 'D') txt = `${t(1111 - prev - 1)} 以下 / ${t(1111 + prev + 1)} 以上`;
+      else if (!Number.isFinite(r.max) || r.max < prev) txt = '⚠ 上の判定より大きい値にしてください';
+      else { txt = `${t(1111 - r.max)} 〜 ${t(1111 + r.max)}`; prev = r.max; }
+      $('range-' + r.g).textContent = txt;
+    });
+  }
+  $('rankRows').oninput = () => { renderRanges(); renderScores(); dirty(); };
+
+  const lines = v => v.split('\n').map(s => s.trim()).filter(Boolean);
+  function fillForm(raw) {
+    const c = window.mergePockyConfig(raw);
+    c.ranks.forEach(r => {
+      $('label-' + r.g).value = r.label;
+      if (r.max !== undefined) $('max-' + r.g).value = (r.max / 100).toFixed(2);
+    });
+    $('jnMin').value = c.jama.normal.min / 1000; $('jnMax').value = c.jama.normal.max / 1000;
+    $('jhMin').value = c.jama.hell.min / 1000;   $('jhMax').value = c.jama.hell.max / 1000;
+    $('toasts').value = c.toasts.map(x => [x.icon, x.app, x.from, x.body, x.color].join(' | ')).join('\n');
+    $('lies').value = c.lies.join('\n');
+    $('announce').value = c.announce.join('\n');
+    $('tTitle').value = c.texts.title; $('tStore').value = c.texts.store;
+    $('tOrg').value = c.texts.org; $('tNotice').value = c.texts.notice;
+    renderRanges();
+    renderScores();
+  }
+  function readForm() {
+    const ms = id => Math.round(parseFloat($(id).value) * 1000);
+    return {
+      texts: { title: $('tTitle').value.trim(), store: $('tStore').value.trim(), org: $('tOrg').value.trim(), notice: $('tNotice').value.trim() },
+      ranks: currentRanks().map(r => r.max === undefined ? { g: r.g, label: r.label } : r),
+      jama: { normal: { min: ms('jnMin'), max: ms('jnMax') }, hell: { min: ms('jhMin'), max: ms('jhMax') } },
+      toasts: lines($('toasts').value).map(l => {
+        const p = l.split('|').map(s => s.trim());
+        if (p.length < 4) return null;
+        return { icon: p[0] || '💬', app: p[1], from: p[2], body: p[3], color: p[4] || '#555555' };
+      }).filter(Boolean),
+      lies: lines($('lies').value),
+      announce: lines($('announce').value),
+    };
+  }
+  function validate(c) {
+    let prev = 0;
+    for (const r of c.ranks) {
+      if (r.max === undefined) continue;
+      if (!Number.isFinite(r.max) || r.max < prev) return `判定 ${r.g} の秒数が正しくありません（上の判定以上の値に）`;
+      prev = r.max;
+    }
+    for (const [k, n] of [['normal', '「あり」'], ['hell', '「地獄」']]) {
+      const { min, max } = c.jama[k];
+      if (!(min >= 100 && max >= min && max <= 20000)) return `${n}の間隔は 0.1〜20 秒で、最短 ≦ 最長にしてください`;
+    }
+    if (!c.toasts.length) return '偽の通知が 1 件もありません（| で 4 つ以上に区切ってください）';
+    if (!c.lies.length) return 'ウソの声かけが 1 件もありません';
+    if (!c.announce.length) return '店内放送が 1 件もありません';
+    if (!c.texts.title) return 'タイトルが空です';
+    return '';
+  }
+
+  let isDirty = false;
+  function dirty() { isDirty = true; msg('未保存の変更があります', ''); }
+  function msg(t, cls) { $('saveMsg').textContent = t; $('saveMsg').className = 'msg ' + cls; }
+  document.querySelectorAll('#tab-jama input, #tab-jama textarea, #tab-texts input, #tab-texts textarea').forEach(el => el.addEventListener('input', dirty));
+  window.addEventListener('beforeunload', e => { if (isDirty) e.preventDefault(); });
+
+  function startConfig() {
+    let first = true;
+    unsubs.push(F.onSnapshot(cfgRef, snap => {
+      // 編集中に上書きしない
+      if (isDirty && !first) return;
+      first = false;
+      fillForm(snap.exists() ? snap.data() : null);
+      isDirty = false; msg('', '');
+    }));
+  }
+
+  $('saveBtn').onclick = async () => {
+    const c = readForm();
+    const err = validate(c);
+    if (err) return msg(err, 'err');
+    $('saveBtn').disabled = true;
+    try {
+      await F.setDoc(cfgRef, c);
+      isDirty = false;
+      msg('保存しました。開いているゲーム画面にもすぐ反映されます', 'ok');
+    } catch (e) { msg('保存できませんでした：' + e.code, 'err'); }
+    $('saveBtn').disabled = false;
+  };
+  $('resetBtn').onclick = () => {
+    if (!confirm('すべての設定を初期値に戻します（保存するまで反映されません）')) return;
+    fillForm(null); dirty();
+  };
+</script>
+</body>
+</html>

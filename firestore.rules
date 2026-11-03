@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 管理者の Google アカウント（複数なら , で区切って追加）
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in ['ADMIN_EMAIL@gmail.com'];
+    }
+
+    // 判定・お邪魔・表示テキスト：だれでも読める／管理者だけ書ける
+    match /config/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 記録：だれでも追加・閲覧できる／削除は管理者だけ／書き換えは不可
+    match /scores/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['cs', 'diff', 'g', 'mode', 'jama', 'at'])
+        && request.resource.data.cs is int && request.resource.data.cs >= 0 && request.resource.data.cs < 100000
+        && request.resource.data.diff == math.abs(request.resource.data.cs - 1111)
+        && request.resource.data.g in ['P', 'S', 'A', 'B', 'C', 'D']
+        && request.resource.data.mode in ['normal', 'oni']
+        && request.resource.data.jama in [0, 1, 2]
+        && request.resource.data.at == request.time;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+  }
+}
