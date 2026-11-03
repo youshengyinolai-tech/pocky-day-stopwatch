@@ -84,13 +84,6 @@
     font-family: var(--mono); font-size: 11px; letter-spacing: .5em; opacity: .45; white-space: nowrap; pointer-events: none;
   }
   .stage > * { position: relative; }
-  .stage.blackout .center, .stage.blackout .status { opacity: 0; transition: opacity .05s; }
-  .blackout-veil {
-    position: absolute; inset: 0; background: #0b0302; z-index: 6; display: grid; place-items: center;
-    font-family: var(--mono); letter-spacing: .4em; font-size: 14px; color: rgba(255,241,220,.5);
-    animation: veil .9s ease-out forwards; pointer-events: none;
-  }
-  @keyframes veil { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 
   .status {
     text-align: center; font-family: var(--mono); font-size: 13px; letter-spacing: .3em; opacity: .85;
@@ -269,13 +262,8 @@
   .toast .bd { font-size: 14px; font-weight: 700; line-height: 1.35; }
   @keyframes toastIn { from { translate: 120% 0; } }
   @keyframes toastOut { to { translate: 120% 0; opacity: 0; } }
-  .j-cat { position: absolute; bottom: 4%; font-size: 92px; line-height: 1; animation: walk 3.4s linear forwards; }
-  .j-cat span { display: inline-block; animation: bob .35s ease-in-out infinite alternate; }
-  .j-cat.rev span { transform: scaleX(-1); }
-  @keyframes walk { from { left: -120px; } to { left: calc(100% + 20px); } }
-  .j-cat.rev { animation-name: walkRev; }
-  @keyframes walkRev { from { left: calc(100% + 20px); } to { left: -120px; } }
-  @keyframes bob { to { translate: 0 -8px; } }
+  @keyframes walk { from { left: -160px; } to { left: calc(100% + 20px); } }
+  @keyframes walkRev { from { left: calc(100% + 20px); } to { left: -160px; } }
   .j-fly {
     position: absolute; width: 22px; height: 220px; border-radius: 999px;
     background: linear-gradient(to top, var(--biscuit) 0 22%, var(--choco) 22%);
@@ -296,6 +284,65 @@
   @keyframes bubble { 0% { opacity: 0; scale: .3; } 18% { opacity: 1; scale: 1.08; } 30% { scale: 1; } 80% { opacity: 1; } 100% { opacity: 0; translate: 0 -16px; } }
   .j-tick { position: absolute; font-family: var(--mono); font-weight: 800; font-size: 20px; letter-spacing: .1em; opacity: 0; animation: tickfx .5s ease-out forwards; }
   @keyframes tickfx { 0% { opacity: .9; scale: 1.3; } 100% { opacity: 0; scale: 1; } }
+
+  .j-cart { position: absolute; bottom: 3%; font-size: 110px; line-height: 1; animation: walk linear forwards; }
+  .j-cart span { display: inline-block; animation: rattle .12s ease-in-out infinite alternate; }
+  .j-cart.rev { animation-name: walkRev; }
+  .j-cart.rev span { transform: scaleX(-1); }
+  @keyframes rattle { to { translate: 0 -4px; rotate: 2deg; } }
+  .j-rain {
+    position: absolute; top: -240px; width: 14px; height: 200px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(0,0,0,.25), transparent 40%, rgba(0,0,0,.2)), linear-gradient(to top, var(--biscuit) 0 22%, var(--choco) 22%);
+    animation: rainfall linear both;
+  }
+  @keyframes rainfall { from { transform: translate(0, 0) rotate(0); } to { transform: translate(var(--dx), calc(100vh + 300px)) rotate(var(--rot)); } }
+  .j-scan {
+    position: absolute; left: 0; right: 0; height: 3px; background: #ff3b3b;
+    box-shadow: 0 0 14px 5px rgba(255,50,50,.65); animation: scan .35s ease-out forwards;
+  }
+  @keyframes scan { from { top: 18%; opacity: 1; } to { top: 82%; opacity: 0; } }
+  .j-price {
+    position: absolute; background: var(--cream); color: var(--ink); font-family: var(--mono); font-weight: 800;
+    font-size: 26px; padding: 6px 14px 8px; border-radius: 4px; box-shadow: 0 8px 20px rgba(0,0,0,.25);
+    animation: jnum 1s ease-out forwards;
+  }
+  .j-price small { display: block; font-family: "Zen Kaku Gothic New", sans-serif; font-size: 11px; opacity: .6; }
+  .j-receipt {
+    position: absolute; top: 0; width: 230px; background: #fffdf7; color: #222; font-family: var(--mono); font-size: 13px;
+    padding: 18px 18px 22px; box-shadow: 0 16px 30px rgba(0,0,0,.3); transform-origin: top center;
+    animation: printDown 2.2s ease-out forwards;
+  }
+  .j-receipt b { display: block; text-align: center; font-family: "Zen Kaku Gothic New", sans-serif; font-size: 14px; }
+  .j-receipt i { display: block; text-align: center; font-style: normal; font-size: 11px; opacity: .55; margin: 4px 0 10px; }
+  .j-receipt div { display: flex; justify-content: space-between; padding: 2px 0; }
+  .j-receipt hr { border: 0; border-top: 1.5px dashed #999; margin: 8px 0; }
+  @keyframes printDown {
+    0% { clip-path: inset(0 0 100% 0); }
+    45% { clip-path: inset(0 0 0 0); }
+    80% { opacity: 1; transform: none; }
+    100% { clip-path: inset(0 0 0 0); opacity: 0; transform: translateY(60px) rotate(6deg); }
+  }
+  .j-banner {
+    position: absolute; left: 0; right: 0; top: 7%; height: 58px; background: #1e7f4f; color: #fff;
+    display: flex; align-items: center; overflow: hidden; box-shadow: 0 10px 24px rgba(0,0,0,.3);
+    animation: bannerIn 3.5s ease forwards;
+  }
+  .j-banner span {
+    display: inline-block; white-space: nowrap; padding-left: 100%; font-weight: 900; font-size: 24px; letter-spacing: .06em;
+    animation: marquee 3.5s linear forwards;
+  }
+  @keyframes marquee { to { transform: translateX(-100%); } }
+  @keyframes bannerIn { 0% { opacity: 0; scale: 1 0; } 8%, 92% { opacity: 1; scale: 1 1; } 100% { opacity: 0; scale: 1 0; } }
+  .j-shutter {
+    position: absolute; inset: 0; display: grid; place-items: center; z-index: 2;
+    background: repeating-linear-gradient(180deg, #c3c6ca 0 18px, #8e9297 18px 20px, #dde0e3 20px 23px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.4); animation: shutter 1.35s cubic-bezier(.5,0,.5,1) forwards;
+  }
+  .j-shutter b {
+    background: #fff; color: #222; border: 3px solid #1e7f4f; padding: 16px 30px; font-size: 26px; font-weight: 900; text-align: center; line-height: 1.5;
+  }
+  .j-shutter b small { display: block; font-size: 13px; color: #1e7f4f; letter-spacing: .1em; }
+  @keyframes shutter { 0% { transform: translateY(-100%); } 30%, 72% { transform: none; } 100% { transform: translateY(-100%); } }
 
   /* ---------- レシート ---------- */
   .receipt-wrap { padding: 22px 22px 22px 0; min-height: 0; display: flex; position: relative; z-index: 2; }
@@ -568,8 +615,11 @@
     notify: () => { tone(988, .12, { type: 'sine', gain: .14 }); tone(1319, .2, { type: 'sine', gain: .14, at: .1 }); },
     swoosh: () => noise(.5, { freq: 1200, q: .6, gain: .12 }),
     thud:   () => { tone(90, .3, { type: 'sine', gain: .3, to: 50 }); noise(.08, { freq: 300, gain: .2 }); },
-    clock:  () => { noise(.025, { freq: 5000, q: 6, gain: .35 }); },
-    off:    () => tone(140, .4, { type: 'sawtooth', gain: .07, to: 40 }),
+    scan:   () => tone(2900, .09, { type: 'square', gain: .07 }),
+    chime:  () => [880, 698, 784, 523].forEach((f, i) => tone(f, .45, { type: 'sine', gain: .16, at: i * .26 })),
+    rattle: (dur) => { for (let t = 0; t < dur; t += .07) noise(.04, { at: t, freq: rand(1500, 3200), q: 4, gain: .07 }); },
+    shutter: () => { for (let t = 0; t < .4; t += .03) noise(.025, { at: t, freq: 2200, q: 2, gain: .1 }); tone(90, .3, { at: .38, gain: .25, to: 50 }); },
+    printer: () => { for (let t = 0; t < .9; t += .05) noise(.04, { at: t, freq: 4200, q: 3, gain: .06 }); },
   };
 
   // ---------- 表示ヘルパー ----------
@@ -607,25 +657,32 @@
 
   // ---------- お邪魔 ----------
   // 隠れている間だけ、ランダムな間隔で発動。どれも本当の経過時間とは無関係。
+  // テーマは「生協」と「ポッキー」。
   const TOASTS = [
-    ['💬', '#3ac569', 'LINE', 'お母さん', '今日の夜ごはんポッキーでいい？'],
-    ['📅', '#e5533d', 'カレンダー', 'リマインダー', '11:11 になりました'],
-    ['⏱', '#555', 'システム', '時計.app', '時刻の同期に失敗しました（残り 4.27 秒）'],
-    ['✉️', '#3b7be0', 'メール', 'ポッキー部長', '至急：いま何秒か教えてください'],
-    ['🔋', '#f0a400', 'バッテリー', '残量 11%', 'あと 1.11 秒で電源が切れます'],
-    ['💬', '#3ac569', 'LINE', '友だち', 'いま 8 秒くらいじゃない？'],
-    ['🔥', '#000', 'X', 'トレンド', '#いま何秒 がトレンド入り'],
-    ['🍫', '#7a3e27', 'お知らせ', 'チョコ工場', 'チョコの流出が止まりません'],
-    ['📞', '#3ac569', '着信', '知らない番号', 'もしもし、9 秒経ちましたよ'],
-    ['⚠️', '#e5533d', '警告', 'セキュリティ', '体内時計がハッキングされています'],
+    ['🛒', '#1e7f4f', '生協', '東京理科大学生協', 'ポッキー、購買部で販売中です'],
+    ['🍫', '#7a3e27', '生協', '購買部', 'ポッキーの在庫、残り 11 箱です'],
+    ['📦', '#7a3e27', '生協', '入荷情報', 'ポッキー（極細）が入荷しました'],
+    ['💳', '#3b7be0', '生協', '組合員証', '組合員証をタッチしてください'],
+    ['🧾', '#555', '生協', 'レジ', 'お会計 1,111 円になります'],
+    ['🍱', '#f0a400', '生協', '食堂', '本日の日替わり：ポッキー定食'],
     ['💬', '#3ac569', 'LINE', '学生委員会 神楽坂支部', '次の人、もう並んでます！早く！'],
-    ['🛒', '#1e7f4f', '生協', '東京理科大学生協', 'ポッキー、購買部で絶賛販売中です'],
+    ['💬', '#3ac569', 'LINE', '学生委員会 神楽坂支部', 'いま何秒？ 9 秒くらい？'],
     ['📢', '#e5533d', 'お知らせ', '学生委員会 神楽坂支部', 'ただいまの記録：11.11 秒（ウソです）'],
+    ['✉️', '#3b7be0', 'メール', '学生委員会', '【至急】ポッキーが 1 本足りません'],
     ['💬', '#3ac569', 'LINE', '委員長', 'さっきの人ぴったり出してたよ'],
+    ['💬', '#3ac569', 'LINE', 'お母さん', '生協でポッキー買ってきて'],
+    ['💬', '#3ac569', 'LINE', '友だち', 'このあとポッキーゲームしよ'],
+    ['📅', '#e5533d', 'カレンダー', 'リマインダー', '11月11日 11:11 ポッキーの日'],
   ];
-  const LIES = ['今だ！', 'まだ！', 'あと3秒！', 'STOP!?', 'もう過ぎた？', '11.11!!', 'はやく！', 'おちついて', '押すな！'];
-  const COUNTS = ['いーち', 'にーい', 'さーん', 'しーい', 'ごーお', 'ろーく', 'なーな', 'はーち', 'きゅーう', 'じゅーう', 'じゅういち'];
-  const COUNTS_SAY = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう', 'じゅういち'];
+  const LIES = ['今だ！', 'まだ！', 'ポッキー！', 'レジ袋いりますか？', '組合員証お持ちですか？', 'あと3秒！', 'もう過ぎた？', '11.11!!', '押すな！', 'ポッキーの日！'];
+  const HON = ['いっぽん', 'にほん', 'さんぼん', 'よんほん', 'ごほん', 'ろっぽん', 'ななほん', 'はっぽん', 'きゅうほん', 'じゅっぽん', 'じゅういっぽん'];
+  const ANNOUNCE = [
+    '本日 11月11日はポッキーの日。生協購買部ではポッキーを販売中です。',
+    '東京理科大学生協 学生委員会 神楽坂支部より、お知らせいたします。',
+    'お客様のお呼び出しを申し上げます。ポッキーをお忘れのお客様…',
+    'まもなく 11 秒です。…たぶん。',
+  ];
+  const POCKY_GRAD = 'linear-gradient(to top, var(--biscuit) 0 22%, var(--choco) 22%)';
 
   const JAMA = {
     fakeTime() {
@@ -637,16 +694,19 @@
     },
     toast() {
       const [ic, col, app, from, body] = pick(TOASTS);
-      const el = spawn('toast', `<div class="ic" style="--ic:${col}">${ic}</div><div class="hd"><span>${app} ・ ${from}</span><span>今</span></div><div class="bd">${body}</div>`, toastsEl, 2900);
+      spawn('toast', `<div class="ic" style="--ic:${col}">${ic}</div><div class="hd"><span>${app} ・ ${from}</span><span>今</span></div><div class="bd">${body}</div>`, toastsEl, 2900);
       sfx.notify();
       if (toastsEl.children.length > 3) toastsEl.firstElementChild.remove();
     },
-    cat() {
-      if (jamaEl.querySelector('.j-cat')) return JAMA.lie();
-      const el = spawn('j-cat' + (Math.random() < .5 ? ' rev' : ''), `<span>${pick(['🐈', '🐈‍⬛', '🐕', '🐧'])}</span>`, jamaEl, 3500);
-      el.style.animationDuration = rand(2.4, 4) + 's';
-      say(pick(['にゃー', 'にゃーん', 'わん']), { pitch: 1.6 });
+    // 生協のカートがガラガラ横切る
+    cart() {
+      if (jamaEl.querySelector('.j-cart')) return JAMA.regi();
+      const dur = rand(2.2, 3.4);
+      const el = spawn('j-cart' + (Math.random() < .5 ? ' rev' : ''), '<span>🛒</span>', jamaEl, dur * 1000 + 100);
+      el.style.animationDuration = dur + 's';
+      sfx.rattle(dur);
     },
+    // ポッキーが飛んでくる
     flyby() {
       const n = Math.random() < .4 ? 3 : 1;
       for (let i = 0; i < n; i++) {
@@ -658,43 +718,74 @@
       }
       sfx.swoosh();
     },
-    fakeClock() {
-      // わざとズレたテンポで時計の音を鳴らす
-      const interval = Math.random() < .5 ? rand(.5, .8) : rand(1.25, 1.6);
+    // ポッキーの雨
+    rain() {
+      const n = data.jama === 2 ? 40 : 24;
+      for (let i = 0; i < n; i++) {
+        const el = spawn('j-rain', '', jamaEl, 2200);
+        el.style.left = rand(-5, 100) + '%';
+        el.style.setProperty('--dx', rand(-60, 60) + 'px');
+        el.style.setProperty('--rot', rand(-200, 200) + 'deg');
+        el.style.animationDuration = rand(.9, 1.5) + 's';
+        el.style.animationDelay = rand(0, .5) + 's';
+      }
+      sfx.swoosh();
+    },
+    // レジのバーコード音をズレたテンポで鳴らす
+    regi() {
+      const interval = Math.random() < .5 ? rand(.45, .75) : rand(1.2, 1.5);
       const n = Math.floor(rand(3, 6));
       for (let i = 0; i < n; i++) {
         jamaTimers.push(setTimeout(() => {
           if (!jamaActive) return;
-          sfx.clock();
-          const el = spawn('j-tick', i % 2 ? 'タク' : 'チク', jamaEl, 600);
-          el.style.left = rand(10, 85) + '%'; el.style.top = rand(10, 80) + '%';
+          sfx.scan();
+          spawn('j-scan', '', jamaEl, 400);
+          const el = spawn('j-price', `<small>ポッキー</small>${pick(['¥111', '¥165', '¥1,111', '¥11', '¥216'])}`, jamaEl, 1000);
+          el.style.left = rand(8, 78) + '%'; el.style.top = rand(12, 72) + '%'; el.style.rotate = rand(-8, 8) + 'deg';
         }, i * interval * 1000));
       }
+    },
+    // レシートがジジジと印刷されて出てくる
+    receipt() {
+      const qty = Math.floor(rand(3, 8));
+      const rows = Array.from({ length: qty }, () => `<div><span>ポッキー</span><span>¥${pick([111, 165, 216])}</span></div>`).join('');
+      const el = spawn('j-receipt', `<b>東京理科大学生協</b><i>11/11 11:11</i>${rows}<hr><div><span>合計</span><span>¥1,111</span></div><i>またのご来店を</i>`, jamaEl, 2300);
+      el.style.left = rand(6, 66) + '%';
+      el.style.rotate = rand(-6, 6) + 'deg';
+      sfx.printer();
+    },
+    // 生協の店内放送
+    announce() {
+      if (jamaEl.querySelector('.j-banner')) return JAMA.toast();
+      const t = pick(ANNOUNCE);
+      spawn('j-banner', `<span>♪ ${t}</span>`, jamaEl, 3600);
+      sfx.chime();
+      jamaTimers.push(setTimeout(() => { if (jamaActive) say(t, { rate: 1.25 }); }, 1100));
+    },
+    // シャッターが下りてくる
+    shutter() {
+      if (jamaEl.querySelector('.j-shutter')) return JAMA.fakeTime();
+      spawn('j-shutter', '<b>本日の営業は終了しました<small>東京理科大学生協</small></b>', jamaEl, 1400);
+      sfx.shutter();
     },
     lie() {
       const t = pick(LIES);
       spawn('j-lie', t, jamaEl, 1000);
       sfx.thud();
-      if (Math.random() < .4) say(t.replace(/[!！?？]/g, ''), { rate: 1.3 });
+      if (Math.random() < .5) say(t.replace(/[!！?？]/g, ''), { rate: 1.3 });
       bump(stage, 'shake');
     },
+    // ポッキーを数える（デタラメな本数）
     count() {
-      const i = Math.floor(Math.random() * COUNTS.length);
-      const el = spawn('j-bubble', COUNTS[i], jamaEl, 1300);
-      el.style.left = rand(8, 70) + '%'; el.style.top = rand(10, 60) + '%';
-      say(COUNTS_SAY[i]);
+      const i = Math.floor(Math.random() * HON.length);
+      const el = spawn('j-bubble', `ポッキー ${i + 1}本`, jamaEl, 1300);
+      el.style.left = rand(8, 66) + '%'; el.style.top = rand(10, 60) + '%';
+      say(HON[i]);
     },
     warp() {
       const c = pick(['j-tilt', 'j-zoom', 'j-blur', 'j-flip']);
       center.classList.add(c);
       jamaTimers.push(setTimeout(() => center.classList.remove(c), rand(600, 1100)));
-    },
-    blackout() {
-      if (stage.querySelector('.blackout-veil')) return;
-      stage.classList.add('blackout');
-      spawn('blackout-veil', '停電中…', stage, 950);
-      sfx.off();
-      jamaTimers.push(setTimeout(() => stage.classList.remove('blackout'), 900));
     },
     fakeStop() {
       // 止めた音だけ鳴らす
@@ -716,7 +807,7 @@
       let k; do { k = pick(JAMA_KEYS); } while (k === lastJama);
       lastJama = k;
       JAMA[k]();
-      if (data.jama === 2 && Math.random() < .35) JAMA[pick(['fakeTime', 'toast', 'count', 'flyby'])]();
+      if (data.jama === 2 && Math.random() < .35) JAMA[pick(['fakeTime', 'toast', 'count', 'flyby', 'regi'])]();
       const lv = JAMA_LEVELS[data.jama];
       scheduleJama(rand(lv.min, lv.max));
     }, delay);
@@ -727,8 +818,6 @@
     jamaTimers.forEach(clearTimeout); jamaTimers = [];
     jamaEl.querySelectorAll(':scope > :not(.toasts)').forEach(e => e.remove());
     toastsEl.innerHTML = '';
-    stage.querySelectorAll('.blackout-veil').forEach(e => e.remove());
-    stage.classList.remove('blackout');
     center.classList.remove('j-tilt', 'j-zoom', 'j-blur', 'j-flip');
     try { speechSynthesis.cancel(); } catch {}
   }
