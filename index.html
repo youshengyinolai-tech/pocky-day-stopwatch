@@ -146,6 +146,25 @@
   @keyframes settle { 0% { transform: translateY(-.12em); opacity: .3; } 100% { transform: none; opacity: 1; } }
   .time.perfect { color: var(--gold); animation: perfectPulse .9s ease-in-out 3; }
   @keyframes perfectPulse { 50% { transform: scale(1.06); text-shadow: 0 .045em 0 var(--red-d), 0 0 .3em var(--gold); } }
+  /* D判定：がっくり */
+  .time.slump .d { animation: slump .8s cubic-bezier(.5,0,.3,1.5) forwards; }
+  .time.slump .d:nth-child(2) { animation-delay: .12s; }
+  .time.slump .d:nth-child(4) { animation-delay: .24s; }
+  .time.slump .d:nth-child(5) { animation-delay: .36s; }
+  .time.slump .dot { transition: transform .6s .2s cubic-bezier(.5,0,.3,1.5), opacity .6s .2s; transform: translateY(.1em); opacity: .6; }
+  @keyframes slump { to { transform: translateY(var(--y, .06em)) rotate(var(--r, 0deg)); opacity: .62; } }
+  .stick { transition: filter .4s, transform 1.4s cubic-bezier(.3,1.6,.5,1); transform-origin: bottom center; }
+  .stick.droop.l { transform: rotate(-8deg); }
+  .stick.droop.r { transform: rotate(8deg); }
+  .stage::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 4; opacity: 0;
+    background: radial-gradient(ellipse 70% 65% at 50% 45%, transparent 35%, rgba(25,0,0,.5));
+    transition: opacity 1.2s;
+  }
+  .stage.down::after { opacity: 1; }
+  .stage > .result, .stage > .controls { z-index: 5; }
+  .stage.down .center { filter: saturate(.7) brightness(.9); }
+
   .target {
     position: absolute; left: 0; right: 0; top: 100%; margin-top: .14em; text-align: center;
     font-family: var(--mono); font-size: max(13px, .075em); letter-spacing: .4em; opacity: .7;
@@ -567,7 +586,8 @@
     chocos[1].style.height = (20 + p2 * 80) + '%';
   }
   function resetSticks() {
-    sticks.forEach(s => s.classList.remove('gold', 'wobble'));
+    sticks.forEach(s => s.classList.remove('gold', 'wobble', 'droop'));
+    stage.classList.remove('down');
     setSticks(0);
   }
   function showCue(text, small) {
@@ -862,6 +882,7 @@
       sfx.good(); rain(18);
     } else if (rank.g === 'D') {
       sfx.bad();
+      slump();
     } else {
       sfx.meh();
     }
@@ -879,6 +900,19 @@
     statusEl.textContent = diff === 0 ? '★ ★ ★ PERFECT ★ ★ ★' : `${PRESS} TO RETRY`;
     btn.classList.remove('wait'); setLabel('もう一回');
     lockCtl(false);
+  }
+
+  // がっくり：数字がずり落ち、ポッキーがしなだれ、照明が落ちる
+  function slump() {
+    setTimeout(() => {
+      digits.forEach(d => {
+        d.style.setProperty('--r', rand(-10, 10).toFixed(1) + 'deg');
+        d.style.setProperty('--y', rand(.04, .1).toFixed(3) + 'em');
+      });
+      timeEl.classList.add('slump');
+      sticks.forEach(s => s.classList.add('droop'));
+      stage.classList.add('down');
+    }, 250);
   }
 
   function flash() {
