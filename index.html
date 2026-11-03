@@ -132,22 +132,6 @@
   .stick.wobble.r { animation-delay: -.8s; }
   @keyframes wobble { 50% { transform: rotate(2.5deg); } }
 
-  /* チョコが溶け落ちる（D判定） */
-  .stick.melt .choco { transition: height 2s cubic-bezier(.55,0,.75,1); }
-  .stick .puddle {
-    position: absolute; left: 50%; bottom: -5px; height: 11px; width: 0; translate: -50% 0; z-index: -1;
-    border-radius: 50%;
-    background: radial-gradient(50% 50% at 42% 32%, #94573a, #3a170b 62%, #1c0904);
-    transition: width 2s .4s cubic-bezier(.3,.8,.4,1);
-  }
-  .stick.melt .puddle { width: 560%; }
-  .drop {
-    position: absolute; left: 50%; width: 64%; aspect-ratio: 1 / 2.8; translate: -50% 0; z-index: 2;
-    border-radius: 50% 50% 50% 50% / 28% 28% 72% 72%;
-    background: linear-gradient(90deg, #2a0f06, #7a4128 40%, #3a170b);
-    animation: drip var(--d, 1.4s) cubic-bezier(.55,0,.8,.8) both;
-  }
-  @keyframes drip { 0% { opacity: 0; scale: .6 .3; } 15% { opacity: 1; scale: 1; } 88% { opacity: 1; } 100% { top: 94%; opacity: 0; scale: 1.3 .5; } }
 
   /* タイム */
   .screen { position: relative; font-size: min(12vw, 28vh); flex: none; }
@@ -370,7 +354,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-    .fall, .flash, .drop { display: none; }
+    .fall, .flash { display: none; }
   }
 </style>
 </head>
@@ -470,7 +454,7 @@
     { max: 15,       g: 'A', label: 'すごい！',  bg: 'var(--cream)', fg: 'var(--red)' },
     { max: 50,       g: 'B', label: 'いい感じ',  bg: 'var(--cream)', fg: 'var(--choco)' },
     { max: 100,      g: 'C', label: 'おしい…',   bg: 'var(--cream-d)', fg: 'var(--choco)' },
-    { max: Infinity, g: 'D', label: 'ドロッ…',   bg: 'var(--red-d)', fg: 'var(--cream)' },
+    { max: Infinity, g: 'D', label: 'ざんねん…',   bg: 'var(--red-d)', fg: 'var(--cream)' },
   ];
 
   const $ = id => document.getElementById(id);
@@ -558,7 +542,6 @@
     good: () => { tone(880, .3, { type: 'triangle' }); tone(1318, .5, { type: 'triangle', at: .1 }); },
     meh:  () => tone(660, .35, { type: 'triangle', gain: .14 }),
     bad:  () => tone(330, .5, { type: 'sawtooth', gain: .08, to: 160 }),
-    melt: () => { tone(220, 1.2, { type: 'sine', gain: .16, to: 60 }); noise(1, { freq: 350, q: .7, gain: .1 }); [0, .3, .55, .8].forEach(at => tone(rand(500, 700), .12, { type: 'sine', gain: .1, at, to: 220 })); },
     flying: () => tone(200, .3, { type: 'square', gain: .1, to: 120 }),
     pour:  () => { tone(180, .35, { type: 'sine', gain: .2, to: 70 }); noise(.3, { freq: 400, q: 1, gain: .12 }); },
     lift:  () => tone(300, .25, { type: 'sine', gain: .12, to: 900 }),
@@ -584,8 +567,7 @@
     chocos[1].style.height = (20 + p2 * 80) + '%';
   }
   function resetSticks() {
-    sticks.forEach(s => s.classList.remove('gold', 'melt', 'wobble'));
-    document.querySelectorAll('.drop, .puddle').forEach(e => e.remove());
+    sticks.forEach(s => s.classList.remove('gold', 'wobble'));
     setSticks(0);
   }
   function showCue(text, small) {
@@ -859,7 +841,7 @@
     if (diff === 0) msg = '完璧な 11.11 秒。あなたがポッキーの日の主役です';
     else if (diff <= 5) msg = over ? 'ほんの一瞬だけ遅かった…！' : 'ほんの一瞬だけ早かった…！';
     else if (diff <= 50) msg = over ? 'ちょっと遅め。もう少し早く！' : 'ちょっと早め。もう少しガマン！';
-    else msg = over ? '待ちすぎてチョコが溶けちゃった' : '焦りすぎてチョコが溶けちゃった';
+    else msg = over ? '待ちすぎ！次はもっと早めに' : '焦りすぎ！次はもっとガマン';
 
     resultEl.innerHTML = `
       <div class="stamp ${rank.g === 'P' ? 'small' : ''}" style="--bg:${rank.bg};--fg:${rank.fg}">${rank.g === 'P' ? '11.11' : rank.g}</div>
@@ -879,7 +861,6 @@
     } else if (rank.g === 'A') {
       sfx.good(); rain(18);
     } else if (rank.g === 'D') {
-      melt();
       sfx.bad();
     } else {
       sfx.meh();
@@ -898,29 +879,6 @@
     statusEl.textContent = diff === 0 ? '★ ★ ★ PERFECT ★ ★ ★' : `${PRESS} TO RETRY`;
     btn.classList.remove('wait'); setLabel('もう一回');
     lockCtl(false);
-  }
-
-  // チョコが溶けて流れ落ち、プレッツェルだけが残る
-  function melt() {
-    setTimeout(() => {
-      sticks.forEach((s, i) => {
-        const top = 100 - parseFloat(chocos[i].style.height || '20');
-        const puddle = document.createElement('div'); puddle.className = 'puddle';
-        s.appendChild(puddle);
-        void puddle.offsetWidth;
-        s.classList.add('melt');
-        chocos[i].style.height = '0%';
-        if (reduced) return;
-        for (let k = 0; k < 2; k++) {
-          const d = document.createElement('div'); d.className = 'drop';
-          d.style.top = Math.min(top + 2 + k * 10, 70) + '%';
-          d.style.setProperty('--d', rand(1.3, 1.8) + 's');
-          d.style.animationDelay = (k * .5 + i * .2) + 's';
-          s.appendChild(d);
-        }
-      });
-      sfx.melt();
-    }, 1400); // 結果のチョコが伸び切ってから溶かす
   }
 
   function flash() {
