@@ -2,9 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="11.11秒チャレンジ">
 <title>11.11秒チャレンジ</title>
-<meta name="description" content="11月11日はポッキーの日！チョコに隠れたタイマーを、お邪魔に負けずぴったり11.11秒で止めろ。">
+<meta name="description" content="11月11日はポッキーの日！チョコに隠れたタイマーを、お邪魔に負けずぴったり11.11秒で止めろ。主催：東京理科大学生協学生委員会 神楽坂支部">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -28,28 +32,30 @@
   body {
     background: var(--red); color: var(--cream);
     font-family: "Zen Kaku Gothic New", system-ui, sans-serif; font-weight: 500;
-    overflow: hidden; -webkit-font-smoothing: antialiased;
+    overflow: hidden; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   }
   button { font: inherit; color: inherit; }
 
   .app {
     display: grid; height: 100dvh;
-    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-columns: minmax(0, 1fr) clamp(290px, 27vw, 380px);
     grid-template-rows: auto minmax(0, 1fr);
   }
 
   /* ---------- 上部バー ---------- */
   .top {
-    grid-column: 1 / -1; display: flex; align-items: center; gap: 28px;
+    grid-column: 1 / -1; display: flex; align-items: center; gap: clamp(10px, 1.8vw, 28px);
     padding: 16px 28px; border-bottom: 2px solid rgba(255,241,220,.18); position: relative; z-index: 8;
   }
   .brand { font-family: var(--display); font-size: 20px; letter-spacing: .02em; white-space: nowrap; }
   .brand b { color: var(--gold); font-weight: 400; }
-  .brand small { font-family: var(--mono); font-size: 11px; letter-spacing: .25em; opacity: .7; margin-left: 10px; }
+  .brand small { display: block; font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .14em; opacity: .75; margin-top: 4px; }
   .spacer { flex: 1; }
   .ctl { display: flex; align-items: center; gap: 4px; font-size: 13px; }
   .ctl > span { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; opacity: .6; margin-right: 6px; }
   .ctl button {
+    white-space: nowrap;
     background: none; border: 1.5px solid transparent; border-radius: 999px; padding: 5px 14px;
     cursor: pointer; opacity: .65; font-weight: 700; transition: opacity .15s, border-color .15s;
   }
@@ -57,6 +63,7 @@
   .ctl button[aria-pressed="true"] { opacity: 1; border-color: var(--cream); }
   .ctl button:disabled { cursor: default; }
   .iconbtn {
+    white-space: nowrap;
     background: none; border: 1.5px solid rgba(255,241,220,.35); border-radius: 10px;
     padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: 700;
   }
@@ -64,6 +71,7 @@
 
   /* ---------- ステージ ---------- */
   .stage {
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; cursor: pointer;
     position: relative; overflow: hidden; display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto auto; padding: 28px 48px 32px;
   }
@@ -298,7 +306,8 @@
                   linear-gradient(#000 0 0) top / 100% calc(100% - 8px) no-repeat;
     scrollbar-width: thin;
   }
-  .receipt h2 { font-family: var(--display); font-weight: 400; font-size: 22px; text-align: center; margin: 0; letter-spacing: .02em; }
+  .receipt h2 { font-family: var(--display); font-weight: 400; font-size: clamp(17px, 1.7vw, 22px); white-space: nowrap; text-align: center; margin: 0; letter-spacing: .02em; }
+  .receipt .store { text-align: center; font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .14em; line-height: 1.7; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1.5px solid rgba(43,16,10,.8); }
   .receipt .sub { text-align: center; font-size: 11px; letter-spacing: .3em; opacity: .6; margin-top: 6px; }
   .rule { border: 0; border-top: 1.5px dashed rgba(43,16,10,.35); margin: 16px 0; }
   .row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
@@ -333,6 +342,15 @@
   @keyframes flash { from { opacity: .6; } to { opacity: 0; } }
 
   /* 狭い画面（スマホ等）では縦積み */
+  @media (max-width: 1300px) {
+    .edge { display: none; }
+    .stage { padding-left: 28px; padding-right: 28px; }
+  }
+  @media (max-width: 1100px) {
+    .ctl > span { display: none; }
+    .ctl button { padding: 5px 10px; }
+    .brand { font-size: 17px; }
+  }
   @media (max-width: 960px) {
     body { overflow: auto; }
     .app { height: auto; grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
@@ -359,7 +377,7 @@
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand">ポッキーの日 <b>11.11</b>秒チャレンジ<small>NOV.11</small></div>
+    <div class="brand">ポッキーの日 <b>11.11</b>秒チャレンジ<small>東京理科大学生協学生委員会 神楽坂支部</small></div>
     <div class="spacer"></div>
     <div class="ctl" role="group" aria-label="難易度">
       <span>MODE</span>
@@ -379,7 +397,7 @@
   <main class="stage" id="stage">
     <div class="edge">POCKY DAY ・ 11.11 CHALLENGE</div>
 
-    <div class="status" id="status">PRESS SPACE TO START</div>
+    <div class="status" id="status"></div>
 
     <div class="center" id="center">
       <div class="stick l" aria-hidden="true"><div class="base"></div><div class="choco"></div><div class="grip"></div></div>
@@ -402,7 +420,7 @@
 
     <div class="controls">
       <button class="key" id="btn">
-        <span class="cap"><span>SPACE</span><em id="btnLabel">スタート</em></span>
+        <span class="cap"><span id="capKey">SPACE</span><em id="btnLabel">スタート</em></span>
       </button>
       <div class="hint" id="modeDesc"></div>
     </div>
@@ -413,6 +431,7 @@
 
   <aside class="receipt-wrap">
     <div class="receipt">
+      <div class="store">東京理科大学生協<br>学生委員会 神楽坂支部</div>
       <h2>11.11 CHALLENGE</h2>
       <div class="sub">― 記録レシート ―</div>
       <hr class="rule">
@@ -428,7 +447,7 @@
       <hr class="rule">
       <button class="share" id="share" disabled>結果を X でシェア</button>
       <div class="barcode" aria-hidden="true"></div>
-      <div class="thanks">THANK YOU FOR PLAYING<br>非公式ファンメイド</div>
+      <div class="thanks">THANK YOU FOR PLAYING<br>主催<br>東京理科大学生協学生委員会<br>神楽坂支部</div>
     </div>
   </aside>
 </div>
@@ -462,6 +481,8 @@
   const sticks = document.querySelectorAll('.stick');
   const chocos = document.querySelectorAll('.choco');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const touch = matchMedia('(pointer: coarse)').matches; // iPad などタッチ端末
+  const PRESS = touch ? 'TAP' : 'PRESS SPACE';
   const rand = (a, b) => a + Math.random() * (b - a);
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
@@ -595,6 +616,10 @@
     ['🍫', '#7a3e27', 'お知らせ', 'チョコ工場', 'チョコの流出が止まりません'],
     ['📞', '#3ac569', '着信', '知らない番号', 'もしもし、9 秒経ちましたよ'],
     ['⚠️', '#e5533d', '警告', 'セキュリティ', '体内時計がハッキングされています'],
+    ['💬', '#3ac569', 'LINE', '学生委員会 神楽坂支部', '次の人、もう並んでます！早く！'],
+    ['🛒', '#1e7f4f', '生協', '東京理科大学生協', 'ポッキー、購買部で絶賛販売中です'],
+    ['📢', '#e5533d', 'お知らせ', '学生委員会 神楽坂支部', 'ただいまの記録：11.11 秒（ウソです）'],
+    ['💬', '#3ac569', 'LINE', '委員長', 'さっきの人ぴったり出してたよ'],
   ];
   const LIES = ['今だ！', 'まだ！', 'あと3秒！', 'STOP!?', 'もう過ぎた？', '11.11!!', 'はやく！', 'おちついて', '押すな！'];
   const COUNTS = ['いーち', 'にーい', 'さーん', 'しーい', 'ごーお', 'ろーく', 'なーな', 'はーち', 'きゅーう', 'じゅーう', 'じゅういち'];
@@ -721,7 +746,7 @@
     renderDesc();
   }
   function renderDesc() {
-    $('modeDesc').textContent = `${MODES[data.mode].desc} ・ お邪魔${JAMA_LEVELS[data.jama].name} ・ ENTER / クリックでもOK`;
+    $('modeDesc').textContent = `${MODES[data.mode].desc} ・ お邪魔${JAMA_LEVELS[data.jama].name} ・ ${touch ? '画面のどこをタップしてもOK' : 'ENTER / クリックでもOK'}`;
   }
 
   function startReady() {
@@ -870,7 +895,7 @@
 
     lastResult = { shown, diff, g: rank.g, mode: data.mode, jama: data.jama };
     shareBtn.disabled = false;
-    statusEl.textContent = diff === 0 ? '★ ★ ★ PERFECT ★ ★ ★' : 'PRESS SPACE TO RETRY';
+    statusEl.textContent = diff === 0 ? '★ ★ ★ PERFECT ★ ★ ★' : `${PRESS} TO RETRY`;
     btn.classList.remove('wait'); setLabel('もう一回');
     lockCtl(false);
   }
@@ -948,15 +973,32 @@
   function pressFx() { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 110); }
 
   // pointerdown で押した瞬間の時刻を使う（クリックより反応が速い）
-  btn.addEventListener('pointerdown', e => { if (e.button === 0) action(e.timeStamp); });
+  // ステージ上ならどこを押してもOK（iPadで押しやすいように）
+  // timeStamp の基準がブラウザによって違う場合に備えて、ずれていたら現在時刻を使う
+  const stampOf = e => Math.abs(e.timeStamp - performance.now()) < 1000 ? e.timeStamp : performance.now();
+  stage.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || !e.isPrimary) return;
+    e.preventDefault();
+    pressFx();
+    action(stampOf(e));
+  });
   btn.addEventListener('click', e => e.preventDefault());
+  stage.addEventListener('contextmenu', e => e.preventDefault());
+  // iOS は最初のタップで音声を解禁しないと鳴らないので、ここで準備しておく
+  let unlocked = false;
+  function unlockAudio() {
+    if (unlocked) return; unlocked = true;
+    audio();
+    try { if ('speechSynthesis' in window && data.sound) { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } } catch {}
+  }
+  ['touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, unlockAudio, { once: true, capture: true }));
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) {
       if (e.target.closest && e.target.closest('.top, .receipt')) return;
       e.preventDefault();
       pressFx();
-      action(e.timeStamp);
+      action(stampOf(e));
     } else if (e.code === 'KeyF' && !e.repeat) {
       toggleFs();
     }
@@ -964,8 +1006,9 @@
 
   function toggleFs() {
     try {
-      if (document.fullscreenElement) document.exitFullscreen();
-      else document.documentElement.requestFullscreen();
+      const el = document.documentElement;
+      if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
     } catch {}
   }
   $('fsBtn').addEventListener('click', e => { toggleFs(); e.currentTarget.blur(); });
@@ -981,10 +1024,12 @@
     if (!lastResult) return;
     const r = lastResult;
     const head = r.g === 'P' ? '【PERFECT】ぴったり11.11秒で止めた！' : `11.11秒チャレンジ ランク${r.g}`;
-    const text = `${head}\n記録 ${r.shown} 秒（誤差 ${(r.diff / 100).toFixed(2)} 秒）／${MODES[r.mode].name}・お邪魔${JAMA_LEVELS[r.jama].name}\n#ポッキーの日 #1111`;
+    const text = `${head}\n記録 ${r.shown} 秒（誤差 ${(r.diff / 100).toFixed(2)} 秒）／${MODES[r.mode].name}・お邪魔${JAMA_LEVELS[r.jama].name}\n主催：東京理科大学生協学生委員会 神楽坂支部\n#ポッキーの日 #1111`;
     window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(location.href), '_blank');
   });
 
+  statusEl.textContent = `${PRESS} TO START`;
+  if (touch) $('capKey').textContent = 'TAP';
   setMode(data.mode);
   setJama(data.jama);
   renderSound();
