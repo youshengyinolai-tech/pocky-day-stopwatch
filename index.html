@@ -587,7 +587,7 @@
         for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
       } catch { return null; }
     }
-    if (ac.state === 'suspended') ac.resume();
+    if (ac.state !== 'running') ac.resume().catch(() => {});
     return ac;
   }
   function tone(freq, dur, { type = 'sine', gain = .18, at = 0, to } = {}) {
@@ -1087,13 +1087,17 @@
   });
   btn.addEventListener('click', e => e.preventDefault());
   stage.addEventListener('contextmenu', e => e.preventDefault());
-  // iOS は最初のタップで音を解禁しないと鳴らないので、ここで準備しておく
-  let unlocked = false;
+  // iOS はタップの中でしか音を解禁できないので、操作のたびに止まっていないか確かめる
+  // マナーモードでも効果音が鳴るように、メディア再生として扱わせる（iOS 17 以降）
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
+  // それより古い iOS 向け：無音の <audio> を一度再生しておくとマナーモードでも鳴る
+  const SILENT_WAV = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+  let silent = null;
   function unlockAudio() {
-    if (unlocked) return; unlocked = true;
-    audio();
+    if (!audio()) return;
+    if (!silent) { silent = new Audio(SILENT_WAV); silent.play().catch(() => {}); }
   }
-  ['touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, unlockAudio, { once: true, capture: true }));
+  ['touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, unlockAudio, { capture: true }));
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) {
