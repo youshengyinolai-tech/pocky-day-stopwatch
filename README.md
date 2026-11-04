@@ -36,6 +36,8 @@ Firebase を設定すると、全端末で同期するランキングと、管�
 
 管理サイト ▶ https://youshengyinolai-tech.github.io/pocky-day-stopwatch/admin.html
 
+学生委員会で共有しているパスコードで入れます（`admin.html#k=パスコード` のリンクを開いても入れます）。一度入った端末では、次から入力は不要です。
+
 - ランキング：記録の一覧・個別削除・全削除
 - 判定：S〜C の秒数と表示名
 - お邪魔：頻度、偽の通知・ウソの声かけ・店内放送の文言
@@ -43,11 +45,13 @@ Firebase を設定すると、全端末で同期するランキングと、管�
 
 保存するとゲーム画面にすぐ反映されます。会場でネットが切れても、最後に受け取った設定で動き、記録はつながったときに送られます。
 
+パスコードを変えるときは、ルールの `PASSCODE` を新しいものにして公開し、Firestore の `admins` コレクションを削除します（入室済みの端末も締め出されます）。
+
 ### Firebase の設定手順
 1. https://console.firebase.google.com で「プロジェクトを作成」（Google アナリティクスはオフで可）
 2. **Firestore Database** →「データベースを作成」→ 本番環境モード、ロケーションは `asia-northeast1`（東京）
-3. Firestore の「ルール」タブに [firestore.rules](firestore.rules) の中身を貼り、`ADMIN_EMAIL@gmail.com` を管理者の Google アカウントに書き換えて「公開」
-4. **Authentication** →「始める」→ ログイン方法に **Google** を追加
+3. Firestore の「ルール」タブに [firestore.rules](firestore.rules) の中身を貼り、`PASSCODE` を管理画面のパスコードに書き換えて「公開」（パスコードはこのリポジトリには書かない）
+4. **Authentication** →「始める」→ ログイン方法に **匿名** を追加
 5. Authentication →「設定」→「承認済みドメイン」に `youshengyinolai-tech.github.io` を追加
 6. プロジェクトの設定（⚙）→「マイアプリ」でウェブアプリ（`</>`）を追加し、表示された `firebaseConfig` の中身を [firebase-config.js](firebase-config.js) の `null` と置き換える
 

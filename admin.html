@@ -63,6 +63,7 @@
   .gate { max-width: 460px; margin: 60px auto; text-align: center; }
   .gate h2 { font-family: var(--display); font-weight: 400; }
   .gate p { opacity: .75; }
+  .passrow { display: flex; gap: 8px; margin: 18px 0; }
   .warn { background: #fff4d6; border: 2px dashed var(--red); padding: 14px; border-radius: 10px; text-align: left; font-size: 14px; }
   code { font-family: var(--mono); background: var(--cream-d); padding: 1px 5px; border-radius: 4px; }
   [hidden] { display: none !important; }
@@ -72,14 +73,17 @@
 <header>
   <h1><b>11.11</b>秒チャレンジ 管理</h1>
   <span class="who" id="who"></span>
-  <button class="small" id="logout" hidden>ログアウト</button>
+  <button class="small" id="logout" hidden>退出</button>
 </header>
 
 <main>
   <div class="gate" id="gate">
-    <h2>管理者ログイン</h2>
-    <p>登録された Google アカウントでログインすると、ランキングの削除や設定の変更ができます。</p>
-    <button class="primary" id="login">Google でログイン</button>
+    <h2>管理画面</h2>
+    <p>学生委員会で共有しているパスコードを入力してください。一度入った端末では、次から入力は不要です。</p>
+    <form class="passrow" id="gateForm">
+      <input id="pass" type="password" autocomplete="current-password" placeholder="パスコード" aria-label="パスコード">
+      <button class="primary" id="enter">入る</button>
+    </form>
     <p class="warn" id="gateMsg" hidden></p>
   </div>
 
@@ -188,7 +192,7 @@
   }
 
   if (!window.FIREBASE_CONFIG) {
-    $('login').disabled = true;
+    $('enter').disabled = true;
     gate('Firebase がまだ設定されていません。<code>firebase-config.js</code> に設定を貼ってください（手順は README）。');
     throw new Error('no config');
   }
@@ -201,33 +205,49 @@
   const db = F.getFirestore(app);
   const cfgRef = F.doc(db, 'config', 'main');
 
-  // ---------- ログイン ----------
-  const provider = new A.GoogleAuthProvider();
-  $('login').onclick = async () => {
-    try { await A.signInWithPopup(auth, provider); }
-    catch (e) {
-      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') A.signInWithRedirect(auth, provider);
-      else gate('ログインできませんでした：' + esc(e.code || e.message));
-    }
-  };
-  $('logout').onclick = () => A.signOut(auth);
-
+  // ---------- 入室（パスコード） ----------
+  // パスコードの照合は Firestore のルールが行う。合っていれば admins/{uid} が作れて、その端末が管理者になる
   let unsubs = [];
-  A.onAuthStateChanged(auth, async user => {
+  function show(ok) {
+    $('gate').hidden = ok; $('panel').hidden = !ok; $('logout').hidden = !ok;
+    $('who').textContent = ok ? '管理モード' : '';
+  }
+  function enterPanel() {
+    gate(''); show(true);
     unsubs.forEach(f => f()); unsubs = [];
-    $('who').textContent = user ? user.email : '';
-    $('logout').hidden = !user;
-    if (!user) { $('gate').hidden = false; $('panel').hidden = true; return; }
-    // 管理者かどうかは Firestore のルールが判定する。設定への書き込み権限で確かめる
-    try {
-      await F.setDoc(F.doc(db, 'config', 'ping'), { by: user.email, at: F.serverTimestamp() });
-    } catch {
-      gate(`<b>${esc(user.email)}</b> は管理者として登録されていません。Firestore のルールに追加してください。`);
-      $('gate').hidden = false; $('panel').hidden = true; return;
-    }
-    gate('');
-    $('gate').hidden = true; $('panel').hidden = false;
     startScores(); startConfig();
+  }
+  async function isAdmin(user) {
+    try { return (await F.getDoc(F.doc(db, 'admins', user.uid))).exists(); } catch { return false; }
+  }
+  async function enter(code) {
+    code = code.trim();
+    if (!code) return;
+    $('enter').disabled = true;
+    try {
+      const user = auth.currentUser || (await A.signInAnonymously(auth)).user;
+      await F.setDoc(F.doc(db, 'admins', user.uid), { pass: code, at: F.serverTimestamp() });
+      $('pass').value = '';
+      enterPanel();
+    } catch (e) {
+      gate(e.code === 'permission-denied' ? 'パスコードが違います' : '入れませんでした：' + esc(e.code || e.message));
+    }
+    $('enter').disabled = false;
+  }
+  $('gateForm').onsubmit = e => { e.preventDefault(); enter($('pass').value); };
+  $('logout').onclick = async () => {
+    unsubs.forEach(f => f()); unsubs = [];
+    await A.signOut(auth);
+    show(false);
+  };
+
+  // 共有リンク（admin.html#k=パスコード）から来たらそのまま入る。パスコードはアドレスバーから消す
+  const linkCode = new URLSearchParams(location.hash.slice(1)).get('k');
+  if (linkCode) history.replaceState(null, '', location.pathname);
+  const off = A.onAuthStateChanged(auth, async user => {
+    off();
+    if (linkCode) return enter(linkCode);
+    if (user && await isAdmin(user)) enterPanel(); else show(false);
   });
 
   // ---------- タブ ----------
