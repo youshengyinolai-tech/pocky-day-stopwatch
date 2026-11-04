@@ -507,8 +507,8 @@
   </aside>
 </div>
 
-<script src="defaults.js?v=202611041226"></script>
-<script src="firebase-config.js?v=202611041226"></script>
+<script src="defaults.js?v=202611041239"></script>
+<script src="firebase-config.js?v=202611041239"></script>
 <script>
   const TARGET_CS = 1111; // 11.11秒（センチ秒）
   const MODES = {
@@ -571,7 +571,7 @@
   let data = load();
 
   // ---------- サウンド（WebAudioで合成） ----------
-  let ac = null, noiseBuf = null;
+  let ac = null, noiseBuf = null, master = null;
   function audio() {
     if (!data.sound) return null;
     if (!ac) {
@@ -580,6 +580,12 @@
         noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
         const ch = noiseBuf.getChannelData(0);
         for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+        // 全部の音をここに集めて持ち上げる。iPad の小さいスピーカーと会場のざわつきでも聞こえるように。
+        // コンプレッサーで大きい音は抑えるので、重なっても割れない
+        master = ac.createGain(); master.gain.value = 1.8;
+        const comp = ac.createDynamicsCompressor();
+        comp.threshold.value = -14; comp.knee.value = 8; comp.ratio.value = 6; comp.attack.value = .003; comp.release.value = .2;
+        master.connect(comp).connect(ac.destination);
       } catch { return null; }
     }
     if (ac.state !== 'running') ac.resume().catch(() => {});
@@ -591,21 +597,21 @@
     o.type = type; o.frequency.setValueAtTime(freq, t);
     if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
     g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .02);
+    o.connect(g).connect(master); o.start(t); o.stop(t + dur + .02);
   }
   function noise(dur, { gain = .2, at = 0, freq = 3000, q = .8, type = 'bandpass' } = {}) {
     const a = audio(); if (!a) return;
     const t = a.currentTime + at, s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
     s.buffer = noiseBuf; f.type = type; f.frequency.value = freq; f.Q.value = q;
     g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    s.connect(f).connect(g).connect(a.destination); s.start(t, Math.random() * .5); s.stop(t + dur + .02);
+    s.connect(f).connect(g).connect(master); s.start(t, Math.random() * .5); s.stop(t + dur + .02);
   }
   const sfx = {
     ready: () => tone(523, .12, { type: 'triangle' }),
     go:    () => { tone(1046, .25, { type: 'triangle', gain: .22 }); noise(.12, { freq: 6000, gain: .08 }); },
     stop:  () => { noise(.05, { freq: 2500, gain: .3 }); tone(220, .08, { type: 'square', gain: .08 }); },
-    roll:  (dur) => { for (let t = 0; t < dur; t += .045) noise(.04, { at: t, freq: 900, q: 1.5, gain: .05 + .15 * (t / dur) }); },
-    tick:  () => tone(1400, .04, { type: 'square', gain: .05 }),
+    roll:  (dur) => { for (let t = 0; t < dur; t += .045) noise(.04, { at: t, freq: 900, q: 1.5, gain: .12 + .25 * (t / dur) }); },
+    tick:  () => tone(1400, .05, { type: 'square', gain: .16 }),
     crash: () => noise(1.2, { freq: 7000, type: 'highpass', gain: .18 }),
     perfect: () => {
       [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, .5, { type: 'triangle', at: i * .09, gain: .16 }));
@@ -614,19 +620,19 @@
     },
     good: () => { tone(880, .3, { type: 'triangle' }); tone(1318, .5, { type: 'triangle', at: .1 }); },
     meh:  () => tone(660, .35, { type: 'triangle', gain: .14 }),
-    bad:  () => tone(330, .5, { type: 'sawtooth', gain: .08, to: 160 }),
-    flying: () => tone(200, .3, { type: 'square', gain: .1, to: 120 }),
+    bad:  () => tone(330, .6, { type: 'sawtooth', gain: .22, to: 160 }),
+    flying: () => tone(200, .35, { type: 'square', gain: .2, to: 120 }),
     pour:  () => { tone(180, .35, { type: 'sine', gain: .2, to: 70 }); noise(.3, { freq: 400, q: 1, gain: .12 }); },
     lift:  () => tone(300, .25, { type: 'sine', gain: .12, to: 900 }),
     // お邪魔用
     notify: () => { tone(988, .12, { type: 'sine', gain: .14 }); tone(1319, .2, { type: 'sine', gain: .14, at: .1 }); },
-    swoosh: () => noise(.5, { freq: 1200, q: .6, gain: .12 }),
+    swoosh: () => noise(.5, { freq: 1200, q: .6, gain: .35 }),
     thud:   () => { tone(90, .3, { type: 'sine', gain: .3, to: 50 }); noise(.08, { freq: 300, gain: .2 }); },
-    scan:   () => tone(2900, .09, { type: 'square', gain: .07 }),
+    scan:   () => tone(2900, .1, { type: 'square', gain: .2 }),
     chime:  () => [880, 698, 784, 523].forEach((f, i) => tone(f, .45, { type: 'sine', gain: .16, at: i * .26 })),
-    rattle: (dur) => { for (let t = 0; t < dur; t += .07) noise(.04, { at: t, freq: rand(1500, 3200), q: 4, gain: .07 }); },
+    rattle: (dur) => { for (let t = 0; t < dur; t += .07) noise(.04, { at: t, freq: rand(1500, 3200), q: 4, gain: .25 }); },
     shutter: () => { for (let t = 0; t < .4; t += .03) noise(.025, { at: t, freq: 2200, q: 2, gain: .1 }); tone(90, .3, { at: .38, gain: .25, to: 50 }); },
-    printer: () => { for (let t = 0; t < .9; t += .05) noise(.04, { at: t, freq: 4200, q: 3, gain: .06 }); },
+    printer: () => { for (let t = 0; t < .9; t += .05) noise(.04, { at: t, freq: 4200, q: 3, gain: .22 }); },
   };
 
   // ---------- 表示ヘルパー ----------
@@ -1206,6 +1212,6 @@
   renderStats();
   resetSticks();
 </script>
-<script type="module" src="sync.js?v=202611041226"></script>
+<script type="module" src="sync.js?v=202611041239"></script>
 </body>
 </html>
