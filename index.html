@@ -510,8 +510,8 @@
   </aside>
 </div>
 
-<script src="defaults.js?v=202611041136"></script>
-<script src="firebase-config.js?v=202611041136"></script>
+<script src="defaults.js?v=202611041146"></script>
+<script src="firebase-config.js?v=202611041146"></script>
 <script>
   const TARGET_CS = 1111; // 11.11秒（センチ秒）
   const MODES = {
@@ -525,12 +525,14 @@
   ];
   // 判定・お邪魔・表示テキストは defaults.js の初期値を、管理サイト（Firebase）の設定で上書きする
   const CFG_KEY = 'pocky1111-config';
-  let CFG, RANKS, TOASTS, LIES, ANNOUNCE;
+  // 管理画面のプレビュー（admin.html の iframe）として開かれたとき。記録は送らず、何も保存しない
+  const PREVIEW = new URLSearchParams(location.search).has('preview');
+  let previewing = false;
+  let CFG, RANKS;
   function setConfig(raw) {
     CFG = mergePockyConfig(raw);
     // 最後の段階は「それ以外すべて」
     RANKS = CFG.ranks.map((r, i, a) => ({ ...r, max: i === a.length - 1 ? Infinity : r.max, bg: POCKY_RANK_COLORS[r.color].bg, fg: POCKY_RANK_COLORS[r.color].fg }));
-    ({ toasts: TOASTS, lies: LIES, announce: ANNOUNCE } = CFG);
     Object.assign(JAMA_LEVELS[1], CFG.jama.normal);
     Object.assign(JAMA_LEVELS[2], CFG.jama.hell);
   }
@@ -568,7 +570,7 @@
     } catch {}
     return d;
   }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} };
+  const save = () => { if (PREVIEW) return; try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} };
   let data = load();
 
   // ---------- サウンド（WebAudioで合成） ----------
@@ -668,143 +670,176 @@
   // テーマは「生協」と「ポッキー」。
   const POCKY_GRAD = 'linear-gradient(to top, var(--biscuit) 0 22%, var(--choco) 22%)';
 
+  // 種類ごとの細かい設定は管理画面で変えられる（defaults.js の POCKY_JAMA_TYPES）
+  const T = k => CFG.jama.types[k];
+  const between = r => rand(r.min, r.max);
   const JAMA = {
     fakeTime() {
-      const fake = Math.random() < .3 ? pick(['11.10', '11.12', '10.99', '11.11', '1.11', '111.1']) : rand(1, 14).toFixed(2);
-      const el = spawn('j-num', fake, jamaEl, 1400);
+      const o = T('fakeTime');
+      const fake = o.nums.length && Math.random() * 100 < o.near ? pick(o.nums) : between(o.randRange).toFixed(2);
+      const el = spawn('j-num', esc(fake), jamaEl, o.life * 1000);
       el.style.left = rand(4, 70) + '%'; el.style.top = rand(8, 70) + '%';
-      el.style.fontSize = rand(48, 150) + 'px'; el.style.rotate = rand(-16, 16) + 'deg';
+      el.style.fontSize = between(o.size) + 'px'; el.style.rotate = rand(-16, 16) + 'deg';
+      el.style.animationDuration = Math.max(.2, o.life - .1) + 's';
       sfx.tick();
     },
     toast() {
-      const { icon, color, app, from, body } = pick(TOASTS);
+      const o = T('toast');
+      const { icon, color, app, from, body } = pick(o.items);
       const hd = [app, from].filter(Boolean).map(esc).join(' ・ ');
-      spawn('toast', `<div class="ic" style="--ic:${color}">${esc(icon)}</div><div class="hd"><span>${hd}</span><span>今</span></div><div class="bd">${esc(body)}</div>`, toastsEl, 2900);
+      const el = spawn('toast', `<div class="ic" style="--ic:${color}">${esc(icon)}</div><div class="hd"><span>${hd}</span><span>今</span></div><div class="bd">${esc(body)}</div>`, toastsEl, o.life * 1000);
+      el.style.animationDelay = `0s, ${Math.max(.3, o.life - .4)}s`;
       sfx.notify();
-      if (toastsEl.children.length > 3) toastsEl.firstElementChild.remove();
+      while (toastsEl.children.length > o.max) toastsEl.firstElementChild.remove();
     },
     // 生協のカートがガラガラ横切る
     cart() {
       if (jamaEl.querySelector('.j-cart')) return;
-      const dur = rand(2.2, 3.4);
-      const el = spawn('j-cart' + (Math.random() < .5 ? ' rev' : ''), '<span>🛒</span>', jamaEl, dur * 1000 + 100);
+      const o = T('cart'), dur = between(o.speed);
+      const el = spawn('j-cart' + (Math.random() < .5 ? ' rev' : ''), `<span>${esc(o.emoji)}</span>`, jamaEl, dur * 1000 + 100);
       el.style.animationDuration = dur + 's';
+      el.style.fontSize = o.size + 'px';
       sfx.rattle(dur);
     },
     // ポッキーが飛んでくる
     flyby() {
-      const n = Math.random() < .4 ? 3 : 1;
+      const o = T('flyby');
+      const n = Math.random() * 100 < o.many ? o.manyCount : 1;
       for (let i = 0; i < n; i++) {
-        const el = spawn('j-fly', '', jamaEl, 1500);
+        const el = spawn('j-fly', '', jamaEl, o.dur * 1000 + i * 120 + 400);
         el.style.top = rand(0, 70) + '%';
         el.style.setProperty('--dy', rand(-200, 200) + 'px');
         el.style.setProperty('--spin', rand(540, 1440) * (Math.random() < .5 ? -1 : 1) + 'deg');
+        el.style.animationDuration = o.dur + 's';
         el.style.animationDelay = i * .12 + 's';
       }
       sfx.swoosh();
     },
     // ポッキーの雨
     rain() {
-      const n = data.jama === 2 ? 40 : 24;
+      const o = T('rain');
+      const n = data.jama === 2 ? o.hell : o.normal;
       for (let i = 0; i < n; i++) {
-        const el = spawn('j-rain', '', jamaEl, 2200);
+        const dur = between(o.speed), delay = rand(0, .5);
+        const el = spawn('j-rain', '', jamaEl, (dur + delay) * 1000 + 100);
         el.style.left = rand(-5, 100) + '%';
         el.style.setProperty('--dx', rand(-60, 60) + 'px');
         el.style.setProperty('--rot', rand(-200, 200) + 'deg');
-        el.style.animationDuration = rand(.9, 1.5) + 's';
-        el.style.animationDelay = rand(0, .5) + 's';
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = delay + 's';
       }
       sfx.swoosh();
     },
     // レジのバーコード音をズレたテンポで鳴らす
     regi() {
-      const interval = Math.random() < .5 ? rand(.45, .75) : rand(1.2, 1.5);
-      const n = Math.floor(rand(3, 6));
+      const o = T('regi');
+      const interval = between(Math.random() * 100 < o.fastRate ? o.fast : o.slow);
+      const n = Math.round(between(o.count));
       for (let i = 0; i < n; i++) {
         jamaTimers.push(setTimeout(() => {
-          if (!jamaOn()) return;
+          if (!jamaOn('regi')) return;
           sfx.scan();
           spawn('j-scan', '', jamaEl, 400);
-          const el = spawn('j-price', `<small>ポッキー</small>${pick(['¥111', '¥165', '¥1,111', '¥11', '¥216'])}`, jamaEl, 1000);
+          if (!o.prices.length && !o.item) return;
+          const el = spawn('j-price', `${o.item ? `<small>${esc(o.item)}</small>` : ''}${esc(o.prices.length ? pick(o.prices) : '')}`, jamaEl, 1000);
           el.style.left = rand(8, 78) + '%'; el.style.top = rand(12, 72) + '%'; el.style.rotate = rand(-8, 8) + 'deg';
         }, i * interval * 1000));
       }
     },
     // レシートがジジジと印刷されて出てくる
     receipt() {
-      const qty = Math.floor(rand(3, 8));
-      const rows = Array.from({ length: qty }, () => `<div><span>ポッキー</span><span>¥${pick([111, 165, 216])}</span></div>`).join('');
-      const el = spawn('j-receipt', `<b>${esc(CFG.texts.store)}</b><i>11/11 11:11</i>${rows}<hr><div><span>合計</span><span>¥1,111</span></div><i>またのご来店を</i>`, jamaEl, 2300);
+      const o = T('receipt');
+      const qty = Math.round(between(o.qty));
+      const rows = Array.from({ length: qty }, () => `<div><span>${esc(o.item)}</span><span>${esc(pick(o.prices))}</span></div>`).join('');
+      const el = spawn('j-receipt', `<b>${esc(CFG.texts.store)}</b>${o.date ? `<i>${esc(o.date)}</i>` : ''}${rows}<hr><div><span>合計</span><span>${esc(o.total)}</span></div>${o.footer ? `<i>${esc(o.footer)}</i>` : ''}`, jamaEl, o.life * 1000);
       el.style.left = rand(6, 66) + '%';
       el.style.rotate = rand(-6, 6) + 'deg';
+      el.style.animationDuration = Math.max(.3, o.life - .1) + 's';
       sfx.printer();
     },
     // 生協の店内放送
     announce() {
       if (jamaEl.querySelector('.j-banner')) return;
-      const t = pick(ANNOUNCE);
-      spawn('j-banner', `<span>♪ ${esc(t)}</span>`, jamaEl, 3600);
-      sfx.chime();
+      const o = T('announce');
+      const el = spawn('j-banner', `<span>♪ ${esc(pick(o.words))}</span>`, jamaEl, o.life * 1000);
+      const d = Math.max(.5, o.life - .1) + 's';
+      el.style.animationDuration = d; el.firstElementChild.style.animationDuration = d;
+      if (o.chime) sfx.chime();
     },
     // シャッターが下りてくる
     shutter() {
       if (jamaEl.querySelector('.j-shutter')) return;
-      spawn('j-shutter', `<b>本日の営業は終了しました<small>${esc(CFG.texts.store)}</small></b>`, jamaEl, 1400);
+      const o = T('shutter');
+      const el = spawn('j-shutter', `<b>${esc(o.text)}<small>${esc(o.sub || CFG.texts.store)}</small></b>`, jamaEl, o.life * 1000);
+      el.style.animationDuration = Math.max(.3, o.life - .05) + 's';
       sfx.shutter();
     },
     lie() {
-      const t = pick(LIES);
-      spawn('j-lie', esc(t), jamaEl, 1000);
+      const o = T('lie');
+      const el = spawn('j-lie', esc(pick(o.words)), jamaEl, o.life * 1000);
+      el.style.animationDuration = Math.max(.2, o.life - .05) + 's';
       sfx.thud();
-      bump(stage, 'shake');
+      if (o.shake) bump(stage, 'shake');
     },
     // ポッキーを数える（デタラメな本数）
     count() {
-      const el = spawn('j-bubble', `ポッキー ${Math.floor(rand(1, 12))}本`, jamaEl, 1300);
+      const o = T('count');
+      const el = spawn('j-bubble', esc(`${o.prefix} ${Math.round(between(o.nums))}${o.unit}`.trim()), jamaEl, o.life * 1000);
       el.style.left = rand(8, 66) + '%'; el.style.top = rand(10, 60) + '%';
+      el.style.animationDuration = Math.max(.2, o.life - .1) + 's';
       sfx.tick();
     },
     warp() {
-      const c = pick(['j-tilt', 'j-zoom', 'j-blur', 'j-flip']);
+      const o = T('warp');
+      const c = 'j-' + pick(Object.keys(o.kinds).filter(k => o.kinds[k]));
       center.classList.add(c);
-      jamaTimers.push(setTimeout(() => center.classList.remove(c), rand(600, 1100)));
+      jamaTimers.push(setTimeout(() => center.classList.remove(c), between(o.dur) * 1000));
     },
     fakeStop() {
       // 止めた音だけ鳴らす
       sfx.stop();
-      showCue(pick(['STOP?', 'ピッ']), true);
+      const o = T('fakeStop');
+      if (o.words.length) showCue(pick(o.words), true);
     },
   };
   const JAMA_KEYS = Object.keys(JAMA);
   let jamaActive = false, jamaTimer = 0, jamaTimers = [], lastJama = '';
 
   function startJama() {
+    previewing = false;
     if (!data.jama) return;
     jamaActive = true;
     scheduleJama(rand(300, 900));
   }
-  // 出してよい時間帯（GO からの経過）は管理画面で決める
+  // 出してよい時間帯（GO からの経過）は管理画面で決める。種類ごとの時間帯があればそちらを優先
   const jamaElapsed = () => performance.now() - startAt;
-  const jamaOn = () => jamaActive && (!CFG.jama.to || jamaElapsed() < CFG.jama.to);
-  // オンになっている種類から、出やすさの重みで選ぶ（同じものは続けない）
+  function inWindow(k, t = jamaElapsed()) {
+    if (previewing) return true;
+    const o = T(k);
+    const from = o.from !== null ? o.from * 1000 : CFG.jama.from;
+    const to = o.to !== null ? o.to * 1000 : CFG.jama.to;
+    return t >= from && (!to || t < to);
+  }
+  const jamaOn = k => jamaActive && inWindow(k);
+  // いま出してよい種類から、出やすさの重みで選ぶ（同じものは続けない）
   function pickJama(keys) {
-    let pool = keys.filter(k => CFG.jama.types[k].on && CFG.jama.types[k].weight > 0);
+    const t = jamaElapsed();
+    let pool = keys.filter(k => T(k).on && inWindow(k, t));
     if (pool.length > 1) pool = pool.filter(k => k !== lastJama);
     let r = Math.random() * pool.reduce((n, k) => n + CFG.jama.types[k].weight, 0);
     return pool.find(k => (r -= CFG.jama.types[k].weight) < 0);
   }
   function scheduleJama(delay) {
     jamaTimer = setTimeout(() => {
-      if (!jamaOn()) return;
-      const t = jamaElapsed();
-      if (t < CFG.jama.from) return scheduleJama(CFG.jama.from - t);
+      if (!jamaActive) return;
       const k = pickJama(JAMA_KEYS);
-      if (!k) return;
-      lastJama = k;
-      JAMA[k]();
-      if (data.jama === 2 && Math.random() * 100 < CFG.jama.double) {
-        const k2 = pickJama(['fakeTime', 'toast', 'count', 'flyby', 'regi']);
-        if (k2) JAMA[k2]();
+      if (k) {
+        lastJama = k;
+        JAMA[k]();
+        if (data.jama === 2 && Math.random() * 100 < CFG.jama.double) {
+          const k2 = pickJama(JAMA_KEYS.filter(x => T(x).pair));
+          if (k2) JAMA[k2]();
+        }
       }
       const lv = JAMA_LEVELS[data.jama];
       scheduleJama(rand(lv.min, lv.max));
@@ -1069,6 +1104,7 @@
 
   // sync.js（Firebase）から呼ばれる窓口。つながらなければ submit は何もしない
   window.Pocky = {
+    preview: PREVIEW,
     applyConfig(raw) {
       try { localStorage.setItem(CFG_KEY, JSON.stringify(raw)); } catch {}
       setConfig(raw);
@@ -1077,6 +1113,27 @@
     setRanking(list, status) { ranking = list; rankStatus = status; renderRanking(); },
     submit() {},
   };
+
+  // 管理画面からのプレビュー指示：まだ保存していない設定を当てて、指定のお邪魔を出す
+  if (PREVIEW) addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data || e.data.pocky !== 'preview') return;
+    const { config, jama } = e.data;
+    if (config) {
+      setConfig(config);
+      applyTexts(); renderDesc(); renderStats(); renderRanking();
+    }
+    if (jama && JAMA[jama]) {
+      // 遊んでいる途中ならそのまま重ねる。止まっているときは画面を片付けてから出す
+      if (state !== 'running') {
+        stopJama();
+        previewing = true; jamaActive = true;
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(() => { if (state !== 'running') { jamaActive = false; previewing = false; } }, 15000);
+      }
+      JAMA[jama]();
+    }
+  });
+  let previewTimer = 0;
 
   // ---------- 入力 ----------
   function action(at) {
@@ -1154,6 +1211,6 @@
   renderStats();
   resetSticks();
 </script>
-<script type="module" src="sync.js?v=202611041136"></script>
+<script type="module" src="sync.js?v=202611041146"></script>
 </body>
 </html>

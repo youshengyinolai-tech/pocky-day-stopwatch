@@ -53,9 +53,75 @@
   .range.bad { color: var(--red); opacity: 1; font-weight: 700; }
   .add { margin-top: 14px; }
   @media (max-width: 560px) { .rank-row { grid-template-columns: 40px 56px 1fr; } .rank-row .sec { grid-column: 2 / -1; } }
-  .types td { white-space: normal; }
-  .types select { width: auto; }
-  .types input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--red); }
+  h3 { font-size: 14px; margin: 18px 0 2px; }
+  .fhelp { font-size: 12px; opacity: .65; margin: 4px 0 0; }
+  details.help summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--red); margin: 4px 0; }
+  .helpbox { font-size: 13px; line-height: 1.8; background: var(--cream); border-radius: 8px; padding: 12px 14px; margin: 6px 0 4px; }
+  .tcount { font-size: 12px; font-weight: 700; background: var(--ink); color: var(--cream); border-radius: 999px; padding: 1px 10px; margin-left: 6px; vertical-align: middle; }
+  .jtools { display: flex; gap: 6px; justify-content: flex-end; margin-bottom: 10px; }
+
+  /* お邪魔のカード */
+  .jcard { border: 1.5px solid var(--line); border-radius: 10px; margin-bottom: 10px; background: #fffaf2; transition: border-color .15s; }
+  .jcard.open { border-color: var(--ink); background: #fff; }
+  .jhead { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+  .jhead .nmw { flex: 1; min-width: 0; cursor: pointer; padding: 4px 0; }
+  .jhead .nm { font-weight: 900; font-size: 15px; }
+  .jhead .sm { font-size: 12px; opacity: .6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jcard.off .nmw { opacity: .45; }
+  .jcard.off .nm::after { content: "（出さない）"; font-size: 12px; font-weight: 700; }
+  .jhead .wt { font-size: 12px; white-space: nowrap; opacity: .7; }
+  .jhead .chev { width: 30px; height: 30px; padding: 0; border-radius: 50%; font-size: 13px; flex: none; }
+  .jcard.open .chev { transform: rotate(180deg); }
+  .jbody { display: none; padding: 4px 16px 18px 16px; border-top: 1.5px dashed var(--line); }
+  .jcard.open .jbody { display: block; }
+  .jdesc { font-size: 13px; background: var(--cream); border-radius: 8px; padding: 10px 12px; margin: 12px 0 4px; }
+  .jsec { font-size: 11px; letter-spacing: .2em; opacity: .5; margin: 18px 0 0; font-weight: 700; }
+  .f { margin-top: 12px; }
+  .f > label, .f > .lb { display: block; font-weight: 700; font-size: 13px; margin: 0 0 4px; }
+  .f .fhelp { margin-top: 3px; }
+  .f.err > label, .f.err > .lb { color: var(--red); }
+  .f.err input { border-color: var(--red); }
+  .inl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .inl input[type="number"] { width: 110px; }
+  .inl .unit { font-size: 13px; opacity: .7; }
+  .ck { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .ck input, .chips input { width: 20px; height: 20px; accent-color: var(--red); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chips label { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 6px 12px; border: 1.5px solid var(--line); border-radius: 999px; background: #fff; font-size: 13px; cursor: pointer; }
+  .chips label:has(input:checked) { border-color: var(--ink); font-weight: 700; }
+  .add-btn { display: block; width: 100%; padding: 9px; border: 1.5px dashed rgba(43,16,10,.4); border-radius: 8px; background: none; color: rgba(43,16,10,.7); font-weight: 700; }
+  .add-btn:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: none; }
+  .litem { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+  .litem .x { flex: none; }
+  .just-added { animation: just-added 1.6s ease-out; }
+  @keyframes just-added { 0%, 30% { box-shadow: 0 0 0 3px rgba(184,20,31,.35); } 100% { box-shadow: none; } }
+  .switch { position: relative; flex: none; width: 46px; height: 26px; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .switch span { position: absolute; inset: 0; border-radius: 999px; background: #cdbfae; transition: background .15s; }
+  .switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .switch input:checked + span { background: var(--green); }
+  .switch input:checked + span::after { transform: translateX(20px); }
+  .switch input:focus-visible + span { outline: 2px solid var(--red); outline-offset: 2px; }
+
+  /* 偽の通知の編集カード */
+  .tcard { border: 1.5px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 8px; background: #fffaf2; }
+  .tcard .tgrid { display: grid; grid-template-columns: 70px 1fr 1fr 70px; gap: 6px; }
+  .tcard .tgrid input[type="color"] { height: 40px; padding: 2px; }
+  .tcard .tbody { margin-top: 6px; }
+  .tcard .tfoot { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+  .tpv { flex: 1; display: grid; grid-template-columns: 30px 1fr; gap: 0 8px; align-items: center; background: rgba(250,247,242,.97); border-radius: 12px; padding: 8px 10px; box-shadow: 0 4px 12px rgba(0,0,0,.15); font-size: 12px; max-width: 340px; }
+  .tpv .ic { grid-row: 1 / 3; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--ic); }
+  .tpv .hd { opacity: .6; font-size: 11px; }
+  .tpv .bd { font-weight: 700; }
+  @media (max-width: 560px) { .tcard .tgrid { grid-template-columns: 60px 1fr 60px; } .tcard .tgrid .from { grid-column: 1 / -1; } }
+
+  /* プレビュー */
+  .pv { position: fixed; inset: 0; z-index: 50; background: rgba(29,12,8,.95); display: flex; flex-direction: column; padding: 14px; }
+  .pvbar { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; margin-bottom: 10px; }
+  .pvbar .sp { flex: 1; }
+  .pvbar button { background: var(--cream); }
+  .pv iframe { flex: 1; width: 100%; border: 0; border-radius: 10px; background: var(--red); }
+  .pvnote { color: #fff; opacity: .75; font-size: 12px; margin: 8px 0 0; }
   .bar { position: sticky; bottom: 0; background: var(--cream); padding: 12px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-top: 2px solid var(--ink); }
   .bar .msg { font-size: 13px; }
   .bar .msg.ok { color: var(--green); font-weight: 700; }
@@ -139,43 +205,42 @@
 
     <section id="tab-jama">
       <div class="card">
-        <h2>お邪魔が出るタイミング</h2>
-        <p class="note">GO! からの秒数で決めます。お邪魔はチョコでタイムが隠れてから出ます（ふつうは 3 秒後、鬼はすぐ）。</p>
+        <h2>お邪魔全体の設定</h2>
+        <p class="note">すべてのお邪魔に共通の設定です。種類ごとの細かい設定は、下の「お邪魔の種類」で変えられます。</p>
+        <details class="help">
+          <summary>お邪魔はどういう流れで出るの？</summary>
+          <div class="helpbox">
+            GO! のあと、タイムがチョコで隠れるとお邪魔が始まります（ふつうモードは 3 秒後、鬼モードはすぐ）。<br>
+            「次が出るまでの間隔」の範囲でランダムに待ち、そのとき出してよい種類の中から「出やすさ」に応じて 1 つ選ばれます。同じものは 2 回続けて出ません。<br>
+            「地獄」では、ときどき「相方」に設定した種類がもう 1 つ同時に出ます。<br>
+            プレイヤーがボタンを押して止めた瞬間に、出ているお邪魔はすべて消えます。
+          </div>
+        </details>
+        <h3>次が出るまでの間隔</h3>
         <div class="grid">
-          <div><label for="jFrom">何秒から出す</label><input type="number" step="0.1" min="0" id="jFrom" placeholder="0"></div>
-          <div><label for="jTo">何秒以降は出さない（空欄なら最後まで）</label><input type="number" step="0.1" min="0" id="jTo" placeholder="制限なし"></div>
-          <div><label for="jDouble">「地獄」で 2 つ同時に出る確率（%）</label><input type="number" step="1" min="0" max="100" id="jDouble"></div>
+          <div><label for="jnMin">「あり」最短（秒）</label><input type="number" step="0.1" min="0.1" id="jnMin"></div>
+          <div><label for="jnMax">「あり」最長（秒）</label><input type="number" step="0.1" min="0.1" id="jnMax"></div>
+          <div><label for="jhMin">「地獄」最短（秒）</label><input type="number" step="0.1" min="0.1" id="jhMin"></div>
+          <div><label for="jhMax">「地獄」最長（秒）</label><input type="number" step="0.1" min="0.1" id="jhMax"></div>
+        </div>
+        <p class="fhelp">短いほど激しくなります。</p>
+        <h3>出る時間帯</h3>
+        <div class="grid">
+          <div><label for="jFrom">GO! から何秒後から出す</label><input type="number" step="0.1" min="0" id="jFrom" placeholder="0"></div>
+          <div><label for="jTo">何秒以降は出さない</label><input type="number" step="0.1" min="0" id="jTo" placeholder="空欄なら最後まで"></div>
+        </div>
+        <p class="fhelp">種類ごとに別の時間帯にしたいときは、その種類のカードで上書きできます。</p>
+        <h3>地獄モード</h3>
+        <div class="grid">
+          <div><label for="jDouble">2 つ同時に出る確率（%）</label><input type="number" step="1" min="0" max="100" id="jDouble"></div>
         </div>
       </div>
+
       <div class="card">
-        <h2>お邪魔の種類</h2>
-        <p class="note">オフにすると出なくなります。出やすさは 1〜5（数字が大きいほどよく出る）。</p>
-        <div class="table-wrap"><table class="types"><thead><tr><th>出す</th><th>種類</th><th>出やすさ</th></tr></thead><tbody id="typeRows"></tbody></table></div>
-      </div>
-      <div class="card">
-        <h2>お邪魔の頻度</h2>
-        <p class="note">次のお邪魔が出るまでの間隔（秒）。この範囲からランダムに選ばれます。短いほど激しくなります。</p>
-        <div class="grid">
-          <div><label>「あり」最短</label><input type="number" step="0.1" min="0.1" id="jnMin"></div>
-          <div><label>「あり」最長</label><input type="number" step="0.1" min="0.1" id="jnMax"></div>
-          <div><label>「地獄」最短</label><input type="number" step="0.1" min="0.1" id="jhMin"></div>
-          <div><label>「地獄」最長</label><input type="number" step="0.1" min="0.1" id="jhMax"></div>
-        </div>
-      </div>
-      <div class="card">
-        <h2>偽の通知</h2>
-        <p class="note">1行に1件。<code>アイコン | アプリ名 | 差出人 | 本文 | 色</code>（色は省略可）</p>
-        <textarea id="toasts" rows="14"></textarea>
-      </div>
-      <div class="card">
-        <h2>ウソの声かけ</h2>
-        <p class="note">1行に1件。画面に大きく出ます。</p>
-        <textarea id="lies" rows="8"></textarea>
-      </div>
-      <div class="card">
-        <h2>店内放送</h2>
-        <p class="note">1行に1件。チャイムのあと帯で流れます。</p>
-        <textarea id="announce" rows="6"></textarea>
+        <h2>お邪魔の種類 <span class="tcount" id="typeCount"></span></h2>
+        <p class="note">左のスイッチで出す・出さないを切り替えます。カードを開くと、その種類だけの細かい設定ができます。<b>▶ 試す</b> を押すと、保存する前の設定のままゲーム画面に出して確かめられます。</p>
+        <div class="jtools"><button class="small" id="openAll">すべて開く</button><button class="small" id="closeAll">すべて閉じる</button></div>
+        <div id="jamaCards"></div>
       </div>
     </section>
 
@@ -192,20 +257,35 @@
 
     <div class="bar" id="saveBar" hidden>
       <button class="primary" id="saveBtn">保存してゲームに反映</button>
+      <button id="tryBtn">ゲームで試す</button>
+      <button id="revertBtn">保存済みの状態に戻す</button>
       <button id="resetBtn">初期値に戻す</button>
       <span class="msg" id="saveMsg"></span>
     </div>
   </div>
 </main>
 
-<script src="defaults.js?v=202611041136"></script>
-<script src="firebase-config.js?v=202611041136"></script>
+<!-- プレビュー（保存前の設定でゲーム画面を開く。記録は送られない） -->
+<div class="pv" id="pv" hidden>
+  <div class="pvbar">
+    <span id="pvTitle">プレビュー</span>
+    <span class="sp"></span>
+    <button class="small" id="pvAgain">▶ もう一度</button>
+    <button class="small" id="pvClose">閉じる</button>
+  </div>
+  <iframe id="pvFrame" title="プレビュー" allow="autoplay; fullscreen"></iframe>
+  <p class="pvnote">まだ保存されていません。見た目と動きの確認用です。音が出ないときは、プレビュー画面を一度タップしてください。ここで遊んだ記録はランキングに送られません。</p>
+</div>
+
+<script src="defaults.js?v=202611041146"></script>
+<script src="firebase-config.js?v=202611041146"></script>
 <script type="module">
   const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
   const D = window.POCKY_DEFAULTS;
   const $ = id => document.getElementById(id);
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const COLORS = window.POCKY_RANK_COLORS, EFFECTS = window.POCKY_EFFECTS, TYPES = window.POCKY_JAMA_TYPES;
+  const clone = v => JSON.parse(JSON.stringify(v));
   const MODE = { normal: 'ふつう', oni: '鬼' };
   const JAMA = ['なし', 'あり', '地獄'];
 
@@ -412,16 +492,167 @@
     renderRanks(); renderScores(); dirty();
   };
 
-  // お邪魔の種類
-  function renderTypes(types) {
-    $('typeRows').innerHTML = Object.entries(TYPES).map(([k, name]) => `<tr>
-      <td><input type="checkbox" data-type="${k}" ${types[k].on ? 'checked' : ''} aria-label="${esc(name)}"></td>
-      <td>${esc(name)}</td>
-      <td><select data-weight="${k}" aria-label="${esc(name)} の出やすさ">${[1, 2, 3, 4, 5].map(w => `<option${w === Math.max(1, types[k].weight) ? ' selected' : ''}>${w}</option>`).join('')}</select></td>
-    </tr>`).join('');
+  // ---------- お邪魔の種類（カード） ----------
+  // jt: 編集中の種類ごとの設定（defaults.js の POCKY_JAMA_TYPES の形）
+  let jt = {};
+  const WEIGHTS = { 1: 'まれ', 2: '少なめ', 3: 'ふつう', 4: '多め', 5: 'とても多い' };
+  const fmtN = v => Number.isFinite(v) ? String(Math.round(v * 1000) / 1000) : '';
+  const numInput = (attrs, v, f) => `<input type="number" ${attrs} value="${fmtN(v)}" step="${f.step ?? 1}" min="${f.lo ?? 0}" max="${f.hi ?? ''}">`;
+
+  function renderCards() {
+    $('jamaCards').innerHTML = Object.entries(TYPES).map(([k, T]) => {
+      const t = jt[k];
+      return `<div class="jcard${t.on ? '' : ' off'}" id="card-${k}">
+        <div class="jhead">
+          <label class="switch" title="出す／出さない"><input type="checkbox" data-t="${k}" data-c="on" ${t.on ? 'checked' : ''} aria-label="${esc(T.name)}を出す"><span></span></label>
+          <div class="nmw" data-open="${k}"><div class="nm">${esc(T.name)}</div><div class="sm">${esc(T.desc)}</div></div>
+          <span class="wt" id="wt-${k}">出やすさ ${WEIGHTS[t.weight]}</span>
+          <button class="small" data-try="${k}">▶ 試す</button>
+          <button class="small chev" data-open="${k}" aria-label="詳しい設定を開く">▾</button>
+        </div>
+        <div class="jbody">
+          <div class="jdesc">${esc(T.desc)}</div>
+          <div class="jsec">共通の設定</div>
+          <div class="f"><label>出やすさ</label>
+            <select data-t="${k}" data-c="weight" style="width:auto">${Object.entries(WEIGHTS).map(([w, n]) => `<option value="${w}"${+w === t.weight ? ' selected' : ''}>${w}：${n}</option>`).join('')}</select>
+            <p class="fhelp">ほかの種類と比べた選ばれやすさです。</p></div>
+          <div class="f" id="f-${k}-window"><span class="lb">この種類が出る時間帯（GO! からの秒）</span>
+            <div class="inl">${numInput(`data-t="${k}" data-c="from" placeholder="全体" aria-label="何秒から"`, t.from, { step: 0.1, lo: 0, hi: 60 })}<span class="unit">秒から</span>
+            ${numInput(`data-t="${k}" data-c="to" placeholder="全体" aria-label="何秒まで"`, t.to, { step: 0.1, lo: 0, hi: 60 })}<span class="unit">秒まで</span></div>
+            <p class="fhelp">空欄なら「お邪魔全体の設定」の時間帯に従います。</p></div>
+          <div class="f"><label class="ck"><input type="checkbox" data-t="${k}" data-c="pair" ${t.pair ? 'checked' : ''}>「地獄」で相方として同時に出る</label></div>
+          <div class="jsec">${esc(T.name)}だけの設定</div>
+          ${T.fields.map(f => `<div class="f" id="f-${k}-${f.k}">${fieldHtml(k, f)}</div>`).join('')}
+          <div class="f" style="margin-top:18px"><button class="small" data-reset="${k}">この種類を初期値に戻す</button></div>
+        </div>
+      </div>`;
+    }).join('');
+    renderTypeCount();
+  }
+  function renderTypeCount() {
+    const on = Object.values(jt).filter(t => t.on).length;
+    $('typeCount').textContent = `${on} / ${Object.keys(TYPES).length} 種類オン`;
   }
 
-  const lines = v => v.split('\n').map(s => s.trim()).filter(Boolean);
+  function fieldHtml(k, f) {
+    const v = jt[k][f.k], a = `data-t="${k}" data-f="${f.k}"`;
+    const lb = `<label>${esc(f.label)}</label>`, help = f.help ? `<p class="fhelp">${esc(f.help)}</p>` : '';
+    const unit = f.unit ? `<span class="unit">${esc(f.unit)}</span>` : '';
+    switch (f.kind) {
+      case 'num': return `${lb}<div class="inl">${numInput(a, v, f)}${unit}</div>${help}`;
+      case 'pct': return `${lb}<div class="inl">${numInput(a, v, { step: 1, lo: 0, hi: 100 })}<span class="unit">%</span></div>${help}`;
+      case 'range': return `${lb}<div class="inl">${numInput(`${a} data-s="min" aria-label="最小"`, v.min, f)}<span class="unit">〜</span>${numInput(`${a} data-s="max" aria-label="最大"`, v.max, f)}${unit}</div>
+        <p class="fhelp">この範囲から毎回ランダムに決まります。${f.help ? esc(f.help) : ''}</p>`;
+      case 'bool': return `<label class="ck"><input type="checkbox" ${a} ${v ? 'checked' : ''}>${esc(f.label)}</label>${help}`;
+      case 'text': return `${lb}<input ${a} value="${esc(v)}">${help}`;
+      case 'checks': return `<span class="lb">${esc(f.label)}</span><div class="chips">${Object.entries(f.options).map(([o, n]) => `<label><input type="checkbox" ${a} data-s="${o}" ${v[o] ? 'checked' : ''}>${esc(n)}</label>`).join('')}</div>
+        <p class="fhelp">チェックしたものからランダムに選ばれます。</p>`;
+      case 'list': return `<span class="lb">${esc(f.label)} <span class="unit">（${v.length} 件）</span></span>${help}
+        <button class="add-btn" data-add="${k}" data-f="${f.k}">＋ 追加</button>
+        ${v.map((x, i) => `<div class="litem"><input ${a} data-i="${i}" value="${esc(x)}" aria-label="${esc(f.label)} ${i + 1}"><button class="small danger x" data-del="${k}" data-f="${f.k}" data-i="${i}">削除</button></div>`).join('')}`;
+      case 'toasts': return `<span class="lb">${esc(f.label)} <span class="unit">（${v.length} 件）</span></span>${help}
+        <button class="add-btn" data-add="${k}" data-f="${f.k}">＋ 通知を追加</button>
+        ${v.map((x, i) => `<div class="tcard">
+          <div class="tgrid">
+            <input ${a} data-i="${i}" data-s="icon" value="${esc(x.icon)}" aria-label="アイコン（絵文字）" title="アイコン（絵文字）">
+            <input ${a} data-i="${i}" data-s="app" value="${esc(x.app)}" placeholder="アプリ名（LINE など）" aria-label="アプリ名">
+            <input class="from" ${a} data-i="${i}" data-s="from" value="${esc(x.from)}" placeholder="差出人" aria-label="差出人">
+            <input type="color" ${a} data-i="${i}" data-s="color" value="${esc(x.color.length === 4 ? '#' + [...x.color.slice(1)].map(c => c + c).join('') : x.color.slice(0, 7))}" aria-label="アイコンの色" title="アイコンの色">
+          </div>
+          <input class="tbody" ${a} data-i="${i}" data-s="body" value="${esc(x.body)}" placeholder="本文" aria-label="本文">
+          <div class="tfoot"><div class="tpv" id="tpv-${k}-${i}">${toastPreview(x)}</div><button class="small danger" data-del="${k}" data-f="${f.k}" data-i="${i}">削除</button></div>
+        </div>`).join('')}`;
+    }
+    return '';
+  }
+  function toastPreview(x) {
+    return `<div class="ic" style="--ic:${esc(x.color)}">${esc(x.icon)}</div><div class="hd">${[x.app, x.from].filter(Boolean).map(esc).join(' ・ ')}　今</div><div class="bd">${esc(x.body) || '<span style="opacity:.4">本文</span>'}</div>`;
+  }
+  const fieldOf = (k, fk) => TYPES[k].fields.find(f => f.k === fk);
+  function rerenderField(k, fk, focusIndex) {
+    const box = $(`f-${k}-${fk}`);
+    box.innerHTML = fieldHtml(k, fieldOf(k, fk));
+    if (focusIndex !== undefined) {
+      const el = box.querySelector(`[data-i="${focusIndex}"]`);
+      if (el) { el.focus(); (el.closest('.tcard') || el.closest('.litem')).classList.add('just-added'); }
+    }
+  }
+
+  $('jamaCards').addEventListener('input', e => {
+    const d = e.target.dataset, k = d.t;
+    if (!k) return;
+    const t = jt[k], el = e.target;
+    const val = () => el.type === 'checkbox' ? el.checked : el.type === 'number' ? (el.value === '' ? NaN : parseFloat(el.value)) : el.value;
+    if (d.c) {
+      if (d.c === 'from' || d.c === 'to') t[d.c] = el.value === '' ? null : parseFloat(el.value);
+      else if (d.c === 'weight') { t.weight = +el.value; $('wt-' + k).textContent = '出やすさ ' + WEIGHTS[t.weight]; }
+      else t[d.c] = val();
+      if (d.c === 'on') { $('card-' + k).classList.toggle('off', !t.on); renderTypeCount(); }
+      return;
+    }
+    const f = fieldOf(k, d.f);
+    if (f.kind === 'range') t[f.k][d.s] = val();
+    else if (f.kind === 'checks') t[f.k][d.s] = el.checked;
+    else if (f.kind === 'list') t[f.k][+d.i] = el.value;
+    else if (f.kind === 'toasts') {
+      t[f.k][+d.i][d.s] = el.value;
+      $(`tpv-${k}-${d.i}`).innerHTML = toastPreview(t[f.k][+d.i]);
+    } else t[f.k] = val();
+  });
+  $('jamaCards').addEventListener('change', e => { if (e.target.tagName === 'SELECT' || e.target.type === 'checkbox' || e.target.type === 'color') e.target.dispatchEvent(new Event('input', { bubbles: true })); });
+  $('jamaCards').addEventListener('click', e => {
+    const b = e.target.closest('[data-open], [data-try], [data-add], [data-del], [data-reset]');
+    if (!b) return;
+    const d = b.dataset;
+    if (d.open) return $('card-' + d.open).classList.toggle('open');
+    if (d.try) return openPreview(d.try);
+    if (d.reset) {
+      if (!confirm(`「${TYPES[d.reset].name}」の設定を初期値に戻します（保存するまで反映されません）`)) return;
+      jt[d.reset] = clone(D.jama.types[d.reset]);
+      const open = $('card-' + d.reset).classList.contains('open');
+      renderCards();
+      if (open) $('card-' + d.reset).classList.add('open');
+      return dirty();
+    }
+    const k = d.add || d.del, f = fieldOf(k, d.f), arr = jt[k][f.k];
+    if (d.add) {
+      // 新しい項目は一覧の先頭に入れて、すぐ書き始められるようにする
+      arr.unshift(f.kind === 'toasts' ? { icon: '💬', color: '#3ac569', app: 'LINE', from: '', body: '' } : '');
+      rerenderField(k, f.k, 0);
+    } else {
+      const i = +d.i, x = arr[i];
+      const label = f.kind === 'toasts' ? x.body : x;
+      if (label && !confirm(`「${label}」を削除しますか？`)) return;
+      arr.splice(i, 1);
+      rerenderField(k, f.k);
+    }
+    dirty();
+  });
+  $('openAll').onclick = () => document.querySelectorAll('.jcard').forEach(c => c.classList.add('open'));
+  $('closeAll').onclick = () => document.querySelectorAll('.jcard').forEach(c => c.classList.remove('open'));
+
+  // ---------- プレビュー ----------
+  let pvJama = null, pvLoaded = false;
+  function openPreview(jama) {
+    pvJama = jama || null;
+    $('pvTitle').textContent = jama ? `プレビュー：${TYPES[jama].name}（保存前の設定）` : 'プレビュー：ゲームを試す（保存前の設定）';
+    $('pvAgain').hidden = !jama;
+    $('pv').hidden = false;
+    document.body.style.overflow = 'hidden';
+    const fr = $('pvFrame');
+    if (pvLoaded) return sendPreview();
+    fr.onload = () => { pvLoaded = true; sendPreview(); };
+    fr.src = 'index.html?preview';
+  }
+  function sendPreview() {
+    $('pvFrame').contentWindow.postMessage({ pocky: 'preview', config: readForm(), jama: pvJama }, location.origin);
+    $('pvFrame').focus();
+  }
+  $('pvAgain').onclick = sendPreview;
+  $('pvClose').onclick = () => { $('pv').hidden = true; document.body.style.overflow = ''; };
+  $('tryBtn').onclick = () => openPreview(null);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('pv').hidden) $('pvClose').click(); });
+
   function fillForm(raw) {
     const c = window.mergePockyConfig(raw);
     ranks = c.ranks.map(r => ({ ...r }));
@@ -429,12 +660,13 @@
     $('jFrom').value = c.jama.from / 1000;
     $('jTo').value = c.jama.to ? c.jama.to / 1000 : '';
     $('jDouble').value = c.jama.double;
-    renderTypes(c.jama.types);
     $('jnMin').value = c.jama.normal.min / 1000; $('jnMax').value = c.jama.normal.max / 1000;
     $('jhMin').value = c.jama.hell.min / 1000;   $('jhMax').value = c.jama.hell.max / 1000;
-    $('toasts').value = c.toasts.map(x => [x.icon, x.app, x.from, x.body, x.color].join(' | ')).join('\n');
-    $('lies').value = c.lies.join('\n');
-    $('announce').value = c.announce.join('\n');
+    // 開いていたカードは開いたままにする
+    const opened = [...document.querySelectorAll('.jcard.open')].map(el => el.id);
+    jt = clone(c.jama.types);
+    renderCards();
+    opened.forEach(id => $(id) && $(id).classList.add('open'));
     $('tTitle').value = c.texts.title; $('tStore').value = c.texts.store;
     $('tOrg').value = c.texts.org; $('tNotice').value = c.texts.notice;
     renderScores();
@@ -453,18 +685,17 @@
         from: $('jFrom').value === '' ? 0 : ms('jFrom'),
         to: $('jTo').value === '' ? 0 : ms('jTo'),
         double: Math.round(parseFloat($('jDouble').value)),
-        types: Object.fromEntries(Object.keys(TYPES).map(k => [k, {
-          on: document.querySelector(`[data-type="${k}"]`).checked,
-          weight: +document.querySelector(`[data-weight="${k}"]`).value,
-        }])),
+        // 空の行は保存しない
+        types: Object.fromEntries(Object.entries(jt).map(([k, t]) => {
+          const o = clone(t);
+          for (const f of TYPES[k].fields) {
+            if (f.kind === 'list') o[f.k] = o[f.k].map(x => x.trim()).filter(Boolean);
+            if (f.kind === 'toasts') o[f.k] = o[f.k].map(x => ({ ...x, icon: x.icon.trim() || '💬', app: x.app.trim(), from: x.from.trim(), body: x.body.trim() })).filter(x => x.body);
+            if (f.kind === 'text' && f.k !== 'emoji') o[f.k] = o[f.k].trim();
+          }
+          return [k, o];
+        })),
       },
-      toasts: lines($('toasts').value).map(l => {
-        const p = l.split('|').map(s => s.trim());
-        if (p.length < 4) return null;
-        return { icon: p[0] || '💬', app: p[1], from: p[2], body: p[3], color: p[4] || '#555555' };
-      }).filter(Boolean),
-      lies: lines($('lies').value),
-      announce: lines($('announce').value),
     };
   }
   function validate(c) {
@@ -483,10 +714,37 @@
       const { min, max } = c.jama[k];
       if (!(min >= 100 && max >= min && max <= 20000)) return `${n}の間隔は 0.1〜20 秒で、最短 ≦ 最長にしてください`;
     }
-    if (!c.toasts.length) return '偽の通知が 1 件もありません（| で 4 つ以上に区切ってください）';
-    if (!c.lies.length) return 'ウソの声かけが 1 件もありません';
-    if (!c.announce.length) return '店内放送が 1 件もありません';
+    const e = validateTypes(c.jama.types);
+    if (e) return e;
     if (!c.texts.title) return 'タイトルが空です';
+    return '';
+  }
+
+  // 種類ごとの設定をチェックして、おかしいところのカードを開いて見せる
+  function validateTypes(types) {
+    document.querySelectorAll('.f.err').forEach(el => el.classList.remove('err'));
+    const fail = (k, fk, m) => {
+      const card = $('card-' + k), box = $(`f-${k}-${fk}`);
+      card.classList.add('open');
+      if (box) { box.classList.add('err'); box.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      return `「${TYPES[k].name}」の${m}`;
+    };
+    const ok = (v, lo, hi) => Number.isFinite(v) && v >= lo && v <= hi;
+    for (const [k, T] of Object.entries(TYPES)) {
+      const t = types[k];
+      if (t.from !== null && !ok(t.from, 0, 60)) return fail(k, 'window', '時間帯は 0〜60 秒にしてください');
+      if (t.to !== null && (!ok(t.to, 0, 60) || (t.from !== null && t.to <= t.from))) return fail(k, 'window', '時間帯の「まで」は「から」より後にしてください');
+      for (const f of T.fields) {
+        const v = t[f.k], range = `${f.lo}〜${f.hi}${f.unit || ''}`;
+        if (f.kind === 'num' && !ok(v, f.lo, f.hi)) return fail(k, f.k, `${f.label}は ${range} にしてください`);
+        if (f.kind === 'pct' && !ok(v, 0, 100)) return fail(k, f.k, `${f.label}は 0〜100% にしてください`);
+        if (f.kind === 'range' && (!ok(v.min, f.lo, f.hi) || !ok(v.max, f.lo, f.hi) || v.min > v.max)) return fail(k, f.k, `${f.label}は ${range} で、左 ≦ 右にしてください`);
+        if (f.kind === 'text' && !f.allowEmpty && !v) return fail(k, f.k, `${f.label}が空です`);
+        if (f.kind === 'list' && !f.allowEmpty && !v.length) return fail(k, f.k, `${f.label}が 1 件もありません`);
+        if (f.kind === 'toasts' && !v.length) return fail(k, f.k, '通知が 1 件もありません（本文が空のものは数えません）');
+        if (f.kind === 'checks' && !Object.values(v).some(Boolean)) return fail(k, f.k, `${f.label}を 1 つ以上選んでください`);
+      }
+    }
     return '';
   }
 
@@ -496,13 +754,15 @@
   ['tab-jama', 'tab-texts'].forEach(id => ['input', 'change'].forEach(ev => $(id).addEventListener(ev, dirty)));
   window.addEventListener('beforeunload', e => { if (isDirty) e.preventDefault(); });
 
+  let savedRaw = null;
   function startConfig() {
     let first = true;
     unsubs.push(F.onSnapshot(cfgRef, snap => {
       // 編集中に上書きしない
       if (isDirty && !first) return;
       first = false;
-      fillForm(snap.exists() ? snap.data() : null);
+      savedRaw = snap.exists() ? snap.data() : null;
+      fillForm(savedRaw);
       isDirty = false; msg('', '');
     }));
   }
@@ -514,10 +774,15 @@
     $('saveBtn').disabled = true;
     try {
       await F.setDoc(cfgRef, c);
+      savedRaw = c;
       isDirty = false;
       msg('保存しました。開いているゲーム画面にもすぐ反映されます', 'ok');
     } catch (e) { msg('保存できませんでした：' + e.code, 'err'); }
     $('saveBtn').disabled = false;
+  };
+  $('revertBtn').onclick = () => {
+    if (isDirty && !confirm('保存していない変更を取り消して、最後に保存した状態に戻します')) return;
+    fillForm(savedRaw); isDirty = false; msg('最後に保存した状態に戻しました', 'ok');
   };
   $('resetBtn').onclick = () => {
     if (!confirm('すべての設定を初期値に戻します（保存するまで反映されません）')) return;

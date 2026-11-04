@@ -3,6 +3,8 @@ const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
 const P = window.Pocky;
 
 async function main() {
+  // 管理画面のプレビューでは Firebase に触らない（記録を送らない・保存済みの設定で上書きしない）
+  if (P.preview) return P.setRanking(null, 'プレビュー');
   const conf = window.FIREBASE_CONFIG;
   if (!conf) return P.setRanking(null, '未設定');
   const { initializeApp } = await import(SDK + 'firebase-app.js');
