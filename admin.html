@@ -73,6 +73,7 @@
   .gate h2 { font-family: var(--display); font-weight: 400; }
   .gate p { opacity: .75; }
   .passrow { display: flex; gap: 8px; margin: 18px 0; }
+  .passrow button { white-space: nowrap; }
   .warn { background: #fff4d6; border: 2px dashed var(--red); padding: 14px; border-radius: 10px; text-align: left; font-size: 14px; }
   code { font-family: var(--mono); background: var(--cream-d); padding: 1px 5px; border-radius: 4px; }
   [hidden] { display: none !important; }
@@ -197,8 +198,8 @@
   </div>
 </main>
 
-<script src="defaults.js"></script>
-<script src="firebase-config.js"></script>
+<script src="defaults.js?v=202611041136"></script>
+<script src="firebase-config.js?v=202611041136"></script>
 <script type="module">
   const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
   const D = window.POCKY_DEFAULTS;
