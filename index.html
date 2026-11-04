@@ -507,8 +507,8 @@
   </aside>
 </div>
 
-<script src="defaults.js?v=202611041530"></script>
-<script src="firebase-config.js?v=202611041530"></script>
+<script src="defaults.js?v=202611041610"></script>
+<script src="firebase-config.js?v=202611041610"></script>
 <script>
   const TARGET_CS = 1111; // 11.11秒（センチ秒）
   const MODES = {
@@ -633,8 +633,13 @@
     rattle: (dur) => { for (let t = 0; t < dur; t += .07) noise(.04, { at: t, freq: rand(1500, 3200), q: 4, gain: .25 }); },
     shutter: () => { for (let t = 0; t < .4; t += .03) noise(.025, { at: t, freq: 2200, q: 2, gain: .1 }); tone(90, .3, { at: .38, gain: .25, to: 50 }); },
     printer: () => { for (let t = 0; t < .9; t += .05) noise(.04, { at: t, freq: 4200, q: 3, gain: .22 }); },
-    buzz:   () => { tone(150, .14, { type: 'square', gain: .18 }); tone(150, .14, { type: 'square', gain: .18, at: .2 }); },
-    knock:  () => { tone(420, .07, { type: 'triangle', gain: .35, to: 180 }); noise(.03, { freq: 1800, q: 1.5, gain: .2 }); },
+    // 不規則な音（生協のお店とポッキー）
+    drawer: () => { noise(.12, { freq: 500, q: 1, gain: .3 }); tone(2093, .9, { type: 'sine', gain: .16, at: .08 }); tone(4186, .5, { type: 'sine', gain: .05, at: .08 }); },
+    coins:  () => { let t = 0; for (let i = 0; i < 6; i++) { tone(rand(3200, 5200), .12, { type: 'triangle', gain: .12, at: t }); t += rand(.03, .09); } },
+    door:   () => { tone(659, .5, { type: 'sine', gain: .22 }); tone(523, .8, { type: 'sine', gain: .22, at: .35 }); },
+    snap:   () => { noise(.03, { freq: 5000, type: 'highpass', gain: .3 }); tone(1800, .05, { type: 'triangle', gain: .15, to: 500 }); },
+    crunch: () => { let t = 0; for (let i = 0; i < 4; i++) { noise(.05, { at: t, freq: rand(1500, 3000), q: 1.2, gain: .35 }); t += rand(.08, .16); } },
+    rustle: () => { for (let t = 0; t < .5; t += rand(.015, .04)) noise(.02, { at: t, freq: rand(5000, 8000), q: 1, gain: .2 }); },
   };
 
   // ---------- 表示ヘルパー ----------
@@ -1225,6 +1230,6 @@
   renderStats();
   resetSticks();
 </script>
-<script type="module" src="sync.js?v=202611041530"></script>
+<script type="module" src="sync.js?v=202611041610"></script>
 </body>
 </html>

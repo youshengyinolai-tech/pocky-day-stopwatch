@@ -190,9 +190,9 @@ window.POCKY_JAMA_TYPES = {
     ],
   },
   sound: {
-    name: '不規則な音', desc: '画面には何も出さず、いろいろな音がバラバラな間隔で鳴ります。頭の中のリズムを崩します。', off: true,
+    name: '不規則な音', desc: '画面には何も出さず、生協のお店やポッキーの音がバラバラな間隔で鳴ります。頭の中のリズムを崩します。', off: true,
     fields: [
-      { k: 'sounds', kind: 'checks', label: '鳴らす音', help: '選んだ音からランダムに鳴ります。', options: { scan: 'ピッ（レジ）', tick: 'カチッ', stop: '止めた音', notify: '通知音', buzz: 'ブブッ（バイブ）', knock: 'コツン' }, def: { scan: true, tick: true, stop: true, notify: true, buzz: true, knock: true } },
+      { k: 'sounds', kind: 'checks', label: '鳴らす音', help: '選んだ音からランダムに鳴ります。', options: { scan: 'レジのピッ', drawer: 'レジのチーン', coins: '小銭のチャリン', door: '自動ドアのピンポーン', snap: 'ポッキーのポキッ', crunch: 'ポリポリ食べる音', rustle: '袋のカサカサ' }, def: { scan: true, drawer: true, coins: true, door: true, snap: true, crunch: true, rustle: true } },
       { k: 'count', kind: 'range', label: '1 回で鳴る数', unit: '回', lo: 1, hi: 15, step: 1, def: { min: 3, max: 6 } },
       { k: 'gap', kind: 'range', label: '音と音の間隔', unit: '秒', lo: 0.05, hi: 3, step: 0.05, def: { min: 0.15, max: 0.9 }, help: '毎回この範囲でバラバラに決まります。' },
     ],
