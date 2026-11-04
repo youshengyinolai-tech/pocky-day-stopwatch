@@ -507,8 +507,8 @@
   </aside>
 </div>
 
-<script src="defaults.js?v=202611041239"></script>
-<script src="firebase-config.js?v=202611041239"></script>
+<script src="defaults.js?v=202611041530"></script>
+<script src="firebase-config.js?v=202611041530"></script>
 <script>
   const TARGET_CS = 1111; // 11.11秒（センチ秒）
   const MODES = {
@@ -633,6 +633,8 @@
     rattle: (dur) => { for (let t = 0; t < dur; t += .07) noise(.04, { at: t, freq: rand(1500, 3200), q: 4, gain: .25 }); },
     shutter: () => { for (let t = 0; t < .4; t += .03) noise(.025, { at: t, freq: 2200, q: 2, gain: .1 }); tone(90, .3, { at: .38, gain: .25, to: 50 }); },
     printer: () => { for (let t = 0; t < .9; t += .05) noise(.04, { at: t, freq: 4200, q: 3, gain: .22 }); },
+    buzz:   () => { tone(150, .14, { type: 'square', gain: .18 }); tone(150, .14, { type: 'square', gain: .18, at: .2 }); },
+    knock:  () => { tone(420, .07, { type: 'triangle', gain: .35, to: 180 }); noise(.03, { freq: 1800, q: 1.5, gain: .2 }); },
   };
 
   // ---------- 表示ヘルパー ----------
@@ -803,6 +805,17 @@
       sfx.stop();
       const o = T('fakeStop');
       if (o.words.length) showCue(pick(o.words), true);
+    },
+    // 画面には出さず、いろいろな音をバラバラな間隔で鳴らす
+    sound() {
+      const o = T('sound');
+      const keys = Object.keys(o.sounds).filter(k => o.sounds[k]);
+      const n = Math.round(between(o.count));
+      let at = 0;
+      for (let i = 0; i < n; i++) {
+        jamaTimers.push(setTimeout(() => { if (jamaOn('sound')) sfx[pick(keys)](); }, at * 1000));
+        at += between(o.gap);
+      }
     },
   };
   const JAMA_KEYS = Object.keys(JAMA);
@@ -1212,6 +1225,6 @@
   renderStats();
   resetSticks();
 </script>
-<script type="module" src="sync.js?v=202611041239"></script>
+<script type="module" src="sync.js?v=202611041530"></script>
 </body>
 </html>

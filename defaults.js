@@ -189,11 +189,20 @@ window.POCKY_JAMA_TYPES = {
       { k: 'words', kind: 'list', label: '画面に出す文字', def: ['STOP?', 'ピッ'], allowEmpty: true, help: '空にすると音だけ鳴ります。' },
     ],
   },
+  sound: {
+    name: '不規則な音', desc: '画面には何も出さず、いろいろな音がバラバラな間隔で鳴ります。頭の中のリズムを崩します。', off: true,
+    fields: [
+      { k: 'sounds', kind: 'checks', label: '鳴らす音', help: '選んだ音からランダムに鳴ります。', options: { scan: 'ピッ（レジ）', tick: 'カチッ', stop: '止めた音', notify: '通知音', buzz: 'ブブッ（バイブ）', knock: 'コツン' }, def: { scan: true, tick: true, stop: true, notify: true, buzz: true, knock: true } },
+      { k: 'count', kind: 'range', label: '1 回で鳴る数', unit: '回', lo: 1, hi: 15, step: 1, def: { min: 3, max: 6 } },
+      { k: 'gap', kind: 'range', label: '音と音の間隔', unit: '秒', lo: 0.05, hi: 3, step: 0.05, def: { min: 0.15, max: 0.9 }, help: '毎回この範囲でバラバラに決まります。' },
+    ],
+  },
 };
 // 地獄で 2 つ同時に出るとき、相方に選ばれやすい（短くて軽い）もの
-const POCKY_PAIR = ['fakeTime', 'toast', 'count', 'flyby', 'regi'];
+const POCKY_PAIR = ['fakeTime', 'toast', 'count', 'flyby', 'regi', 'sound'];
 for (const [k, t] of Object.entries(window.POCKY_JAMA_TYPES)) {
-  const d = { on: true, weight: 3, from: null, to: null, pair: POCKY_PAIR.includes(k) };
+  // off: true の種類は、管理画面でオンにするまで出ない
+  const d = { on: !t.off, weight: 3, from: null, to: null, pair: POCKY_PAIR.includes(k) };
   for (const f of t.fields) d[f.k] = typeof f.def === 'string' && (f.kind === 'list' || f.kind === 'toasts') ? window.POCKY_DEFAULTS[f.def] : f.def;
   window.POCKY_DEFAULTS.jama.types[k] = d;
 }
@@ -272,7 +281,7 @@ window.mergePockyConfig = function (cfg) {
         const t = (j.types || {})[k] || {}, d = D.jama.types[k];
         const sec = (v, lo, hi) => Number.isFinite(v) && v >= lo && v <= hi ? v : null;
         const out = {
-          on: typeof t.on === 'boolean' ? t.on : true,
+          on: typeof t.on === 'boolean' ? t.on : d.on,
           weight: num(t.weight, 3, 1, 5),
           // 種類ごとの時間帯（null なら全体の設定に従う）
           from: sec(t.from, 0, 60), to: sec(t.to, 0, 60),
