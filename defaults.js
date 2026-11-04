@@ -7,19 +7,27 @@ window.POCKY_DEFAULTS = {
     org: '学生委員会 神楽坂支部',
     notice: '',
   },
-  // max: 誤差（1/100秒）。P は常に 0、D はそれ以外すべて。
+  // 上から順に判定。max: 誤差（1/100秒）以内。最後の段階は「それ以外すべて」なので max なし。
+  // color: POCKY_RANK_COLORS のキー、effect: POCKY_EFFECTS のキー
   ranks: [
-    { g: 'P', label: 'PERFECT!!' },
-    { g: 'S', max: 5,   label: '神業' },
-    { g: 'A', max: 15,  label: 'すごい！' },
-    { g: 'B', max: 50,  label: 'いい感じ' },
-    { g: 'C', max: 100, label: 'おしい…' },
-    { g: 'D', label: 'ざんねん…' },
+    { g: 'P', label: 'PERFECT!!', max: 0,   color: 'gold',  effect: 'perfect' },
+    { g: 'S', label: '神業',      max: 5,   color: 'ink',   effect: 'great' },
+    { g: 'A', label: 'すごい！',  max: 15,  color: 'cream', effect: 'good' },
+    { g: 'B', label: 'いい感じ',  max: 50,  color: 'choco', effect: 'meh' },
+    { g: 'C', label: 'おしい…',   max: 100, color: 'beige', effect: 'meh' },
+    { g: 'D', label: 'ざんねん…', color: 'red', effect: 'bad' },
   ],
-  // お邪魔の間隔（ミリ秒）
   jama: {
+    // 次のお邪魔までの間隔（ミリ秒）
     normal: { min: 900, max: 2000 },
     hell:   { min: 350, max: 900 },
+    // 出してよい時間帯（GO からのミリ秒）。to が 0 なら最後まで
+    from: 0,
+    to: 0,
+    // 地獄で 2 つ同時に出る確率（%）
+    double: 35,
+    // 種類ごとのオン・オフと出やすさ（0〜5）
+    types: {},
   },
   toasts: [
     { icon: '🛒', color: '#1e7f4f', app: '生協', from: '東京理科大学生協', body: 'ポッキー、購買部で販売中です' },
@@ -46,6 +54,34 @@ window.POCKY_DEFAULTS = {
   ],
 };
 
+// スタンプの色 [背景, 文字]
+window.POCKY_RANK_COLORS = {
+  gold:  { name: '金',       bg: '#f2c14e', fg: '#2b100a' },
+  ink:   { name: '黒',       bg: '#2b100a', fg: '#f2c14e' },
+  cream: { name: 'クリーム×赤', bg: '#fff1dc', fg: '#b8141f' },
+  choco: { name: 'クリーム×茶', bg: '#fff1dc', fg: '#4b2317' },
+  beige: { name: 'ベージュ',  bg: '#f3dcb8', fg: '#4b2317' },
+  red:   { name: '赤',       bg: '#7d0b14', fg: '#fff1dc' },
+  green: { name: '緑',       bg: '#1e7f4f', fg: '#fff1dc' },
+  pink:  { name: 'ピンク',    bg: '#f49ab0', fg: '#2b100a' },
+};
+// 結果の演出
+window.POCKY_EFFECTS = {
+  perfect: '大当たり（フラッシュ＋金色＋紙吹雪たくさん）',
+  great:   'すごい（金色＋紙吹雪）',
+  good:    'よい（紙吹雪すこし）',
+  meh:     'ふつう（音だけ）',
+  bad:     'がっくり（数字が崩れて暗くなる）',
+};
+// お邪魔の種類（index.html の JAMA と同じキー）
+window.POCKY_JAMA_TYPES = {
+  fakeTime: '偽タイム', toast: '偽の通知', cart: 'カート', flyby: '飛んでくるポッキー',
+  rain: 'ポッキーの雨', regi: 'レジのピッ音', receipt: 'レシート', announce: '店内放送',
+  shutter: 'シャッター', lie: 'ウソの声かけ', count: '本数カウント', warp: '画面の傾き・反転',
+  fakeStop: '偽のストップ音',
+};
+for (const k in window.POCKY_JAMA_TYPES) window.POCKY_DEFAULTS.jama.types[k] = { on: true, weight: 3 };
+
 // 保存された設定を初期値に重ねて、壊れた値は初期値に戻す
 window.mergePockyConfig = function (cfg) {
   const D = window.POCKY_DEFAULTS;
@@ -58,12 +94,18 @@ window.mergePockyConfig = function (cfg) {
   const texts = {};
   for (const k in D.texts) texts[k] = str(t[k], D.texts[k]);
 
-  const r = Array.isArray(c.ranks) ? c.ranks : [];
+  // 古い形式（P と D に max がない）も読めるようにする
+  const src = (Array.isArray(c.ranks) && c.ranks.filter(x => x && typeof x === 'object').length >= 2 ? c.ranks.filter(x => x && typeof x === 'object') : D.ranks).slice(0, 12);
   let prev = 0;
-  const ranks = D.ranks.map(d => {
-    const s = r.find(x => x && x.g === d.g) || {};
-    const out = { g: d.g, label: str(s.label, d.label) || d.label };
-    if (d.max !== undefined) { out.max = Math.max(prev, num(s.max, d.max, 0, 9999)); prev = out.max; }
+  const ranks = src.map((s, i) => {
+    const d = D.ranks.find(x => x.g === s.g) || {};
+    const out = {
+      g: (str(s.g, '').trim() || '?').slice(0, 2),
+      label: str(s.label, d.label || ''),
+      color: window.POCKY_RANK_COLORS[s.color] ? s.color : d.color || 'cream',
+      effect: window.POCKY_EFFECTS[s.effect] ? s.effect : d.effect || 'meh',
+    };
+    if (i < src.length - 1) { out.max = Math.max(prev, num(s.max, d.max === undefined ? 0 : d.max, 0, 9999)); prev = out.max; }
     return out;
   });
 
@@ -80,7 +122,15 @@ window.mergePockyConfig = function (cfg) {
 
   return {
     texts, ranks,
-    jama: { normal: lv(j.normal, D.jama.normal), hell: lv(j.hell, D.jama.hell) },
+    jama: {
+      normal: lv(j.normal, D.jama.normal), hell: lv(j.hell, D.jama.hell),
+      from: num(j.from, 0, 0, 60000), to: num(j.to, 0, 0, 60000),
+      double: num(j.double, D.jama.double, 0, 100),
+      types: Object.fromEntries(Object.keys(D.jama.types).map(k => {
+        const t = (j.types || {})[k] || {};
+        return [k, { on: typeof t.on === 'boolean' ? t.on : true, weight: num(t.weight, 3, 0, 5) }];
+      })),
+    },
     toasts: toasts.length ? toasts : D.toasts,
     lies: words(c.lies, D.lies),
     announce: words(c.announce, D.announce),

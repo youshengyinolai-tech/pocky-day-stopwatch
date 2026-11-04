@@ -524,16 +524,12 @@
     { name: '地獄', min: 350, max: 900 },
   ];
   // 判定・お邪魔・表示テキストは defaults.js の初期値を、管理サイト（Firebase）の設定で上書きする
-  // スタンプの色 [bg, fg]
-  const RANK_STYLE = {
-    P: ['var(--gold)', 'var(--ink)'], S: ['var(--ink)', 'var(--gold)'], A: ['var(--cream)', 'var(--red)'],
-    B: ['var(--cream)', 'var(--choco)'], C: ['var(--cream-d)', 'var(--choco)'], D: ['var(--red-d)', 'var(--cream)'],
-  };
   const CFG_KEY = 'pocky1111-config';
   let CFG, RANKS, TOASTS, LIES, ANNOUNCE;
   function setConfig(raw) {
     CFG = mergePockyConfig(raw);
-    RANKS = CFG.ranks.map(r => ({ ...r, max: r.g === 'P' ? 0 : r.g === 'D' ? Infinity : r.max, bg: RANK_STYLE[r.g][0], fg: RANK_STYLE[r.g][1] }));
+    // 最後の段階は「それ以外すべて」
+    RANKS = CFG.ranks.map((r, i, a) => ({ ...r, max: i === a.length - 1 ? Infinity : r.max, bg: POCKY_RANK_COLORS[r.color].bg, fg: POCKY_RANK_COLORS[r.color].fg }));
     ({ toasts: TOASTS, lies: LIES, announce: ANNOUNCE } = CFG);
     Object.assign(JAMA_LEVELS[1], CFG.jama.normal);
     Object.assign(JAMA_LEVELS[2], CFG.jama.hell);
@@ -689,7 +685,7 @@
     },
     // 生協のカートがガラガラ横切る
     cart() {
-      if (jamaEl.querySelector('.j-cart')) return JAMA.regi();
+      if (jamaEl.querySelector('.j-cart')) return;
       const dur = rand(2.2, 3.4);
       const el = spawn('j-cart' + (Math.random() < .5 ? ' rev' : ''), '<span>🛒</span>', jamaEl, dur * 1000 + 100);
       el.style.animationDuration = dur + 's';
@@ -726,7 +722,7 @@
       const n = Math.floor(rand(3, 6));
       for (let i = 0; i < n; i++) {
         jamaTimers.push(setTimeout(() => {
-          if (!jamaActive) return;
+          if (!jamaOn()) return;
           sfx.scan();
           spawn('j-scan', '', jamaEl, 400);
           const el = spawn('j-price', `<small>ポッキー</small>${pick(['¥111', '¥165', '¥1,111', '¥11', '¥216'])}`, jamaEl, 1000);
@@ -745,14 +741,14 @@
     },
     // 生協の店内放送
     announce() {
-      if (jamaEl.querySelector('.j-banner')) return JAMA.toast();
+      if (jamaEl.querySelector('.j-banner')) return;
       const t = pick(ANNOUNCE);
       spawn('j-banner', `<span>♪ ${esc(t)}</span>`, jamaEl, 3600);
       sfx.chime();
     },
     // シャッターが下りてくる
     shutter() {
-      if (jamaEl.querySelector('.j-shutter')) return JAMA.fakeTime();
+      if (jamaEl.querySelector('.j-shutter')) return;
       spawn('j-shutter', `<b>本日の営業は終了しました<small>${esc(CFG.texts.store)}</small></b>`, jamaEl, 1400);
       sfx.shutter();
     },
@@ -787,13 +783,29 @@
     jamaActive = true;
     scheduleJama(rand(300, 900));
   }
+  // 出してよい時間帯（GO からの経過）は管理画面で決める
+  const jamaElapsed = () => performance.now() - startAt;
+  const jamaOn = () => jamaActive && (!CFG.jama.to || jamaElapsed() < CFG.jama.to);
+  // オンになっている種類から、出やすさの重みで選ぶ（同じものは続けない）
+  function pickJama(keys) {
+    let pool = keys.filter(k => CFG.jama.types[k].on && CFG.jama.types[k].weight > 0);
+    if (pool.length > 1) pool = pool.filter(k => k !== lastJama);
+    let r = Math.random() * pool.reduce((n, k) => n + CFG.jama.types[k].weight, 0);
+    return pool.find(k => (r -= CFG.jama.types[k].weight) < 0);
+  }
   function scheduleJama(delay) {
     jamaTimer = setTimeout(() => {
-      if (!jamaActive) return;
-      let k; do { k = pick(JAMA_KEYS); } while (k === lastJama);
+      if (!jamaOn()) return;
+      const t = jamaElapsed();
+      if (t < CFG.jama.from) return scheduleJama(CFG.jama.from - t);
+      const k = pickJama(JAMA_KEYS);
+      if (!k) return;
       lastJama = k;
       JAMA[k]();
-      if (data.jama === 2 && Math.random() < .35) JAMA[pick(['fakeTime', 'toast', 'count', 'flyby', 'regi'])]();
+      if (data.jama === 2 && Math.random() * 100 < CFG.jama.double) {
+        const k2 = pickJama(['fakeTime', 'toast', 'count', 'flyby', 'regi']);
+        if (k2) JAMA[k2]();
+      }
       const lv = JAMA_LEVELS[data.jama];
       scheduleJama(rand(lv.min, lv.max));
     }, delay);
@@ -934,33 +946,19 @@
 
     let msg;
     if (diff === 0) msg = '完璧な 11.11 秒。あなたがポッキーの日の主役です';
-    else if (diff <= RANKS[1].max) msg = over ? 'ほんの一瞬だけ遅かった…！' : 'ほんの一瞬だけ早かった…！';
-    else if (diff <= RANKS[3].max) msg = over ? 'ちょっと遅め。もう少し早く！' : 'ちょっと早め。もう少しガマン！';
+    else if (diff <= 5) msg = over ? 'ほんの一瞬だけ遅かった…！' : 'ほんの一瞬だけ早かった…！';
+    else if (diff <= 50) msg = over ? 'ちょっと遅め。もう少し早く！' : 'ちょっと早め。もう少しガマン！';
     else msg = over ? '待ちすぎ！次はもっと早めに' : '焦りすぎ！次はもっとガマン';
 
     resultEl.innerHTML = `
-      <div class="stamp ${rank.g === 'P' ? 'small' : ''}" style="--bg:${rank.bg};--fg:${rank.fg}">${rank.g === 'P' ? '11.11' : rank.g}</div>
+      <div class="stamp ${rank.max === 0 || rank.g.length > 1 ? 'small' : ''}" style="--bg:${rank.bg};--fg:${rank.fg}">${rank.max === 0 ? '11.11' : esc(rank.g)}</div>
       <div class="txt">
-        <div class="label">${rank.label}${isBest ? '<span class="newbest">NEW BEST</span>' : ''}</div>
+        <div class="label">${esc(rank.label)}${isBest ? '<span class="newbest">NEW BEST</span>' : ''}</div>
         <div class="diff">誤差 ${diff === 0 ? '±0.00' : (over ? '+' : '−') + (diff / 100).toFixed(2)} 秒 ・ ${MODES[data.mode].name} ・ お邪魔${JAMA_LEVELS[data.jama].name}</div>
         <div class="msg">${msg}</div>
       </div>`;
 
-    if (rank.g === 'P') {
-      timeEl.classList.add('perfect');
-      sticks.forEach(s => s.classList.add('gold'));
-      sfx.perfect(); flash(); rain(120);
-    } else if (rank.g === 'S') {
-      sticks.forEach(s => s.classList.add('gold'));
-      sfx.good(); rain(45);
-    } else if (rank.g === 'A') {
-      sfx.good(); rain(18);
-    } else if (rank.g === 'D') {
-      sfx.bad();
-      slump();
-    } else {
-      sfx.meh();
-    }
+    EFFECTS[rank.effect]();
 
     data.tries++;
     if (diff === 0) data.perfects++;
@@ -977,6 +975,19 @@
     btn.classList.remove('wait'); setLabel('もう一回');
     lockCtl(false);
   }
+
+  // 判定ごとの演出（管理画面で段階ごとに選べる）
+  const EFFECTS = {
+    perfect() {
+      timeEl.classList.add('perfect');
+      sticks.forEach(s => s.classList.add('gold'));
+      sfx.perfect(); flash(); rain(120);
+    },
+    great() { sticks.forEach(s => s.classList.add('gold')); sfx.good(); rain(45); },
+    good() { sfx.good(); rain(18); },
+    meh() { sfx.meh(); },
+    bad() { sfx.bad(); slump(); },
+  };
 
   // がっくり：数字がずり落ち、ポッキーがしなだれ、照明が落ちる
   function slump() {
@@ -1024,10 +1035,10 @@
     $('perfects').textContent = data.perfects;
     $('history').innerHTML = data.history.length
       ? data.history.map(h => {
-          const r = RANKS.find(r => r.g === h.g);
+          const r = RANKS.find(r => r.g === h.g) || RANKS.find(r => h.diff <= r.max);
           const no = h.n ? String(h.n).padStart(3, '0') : '---';
           const tag = (MODES[h.m] ? MODES[h.m].name : '') + (h.j === 2 ? '・地獄' : h.j === 0 ? '・素' : '');
-          return `<li><span class="no">${no}</span><span class="t">${h.t}s<small>${tag}</small></span><span class="g" style="--bg:${r.bg};--fg:${r.fg}">${h.g}</span><span class="e">±${(h.diff / 100).toFixed(2)}</span></li>`;
+          return `<li><span class="no">${no}</span><span class="t">${h.t}s<small>${tag}</small></span><span class="g" style="--bg:${r.bg};--fg:${r.fg}">${esc(h.g)}</span><span class="e">±${(h.diff / 100).toFixed(2)}</span></li>`;
         }).join('')
       : '<li class="empty">まだ記録がありません</li>';
   }
@@ -1042,7 +1053,7 @@
       ? list.map((s, i) => {
           const r = RANKS.find(r => s.diff <= r.max);
           const tag = s.jama === 2 ? '地獄' : s.jama === 0 ? '素' : '';
-          return `<li><span class="no">${i + 1}位</span><span class="t">${(s.cs / 100).toFixed(2)}s<small>${tag}</small></span><span class="g" style="--bg:${r.bg};--fg:${r.fg}">${r.g}</span><span class="e">±${(s.diff / 100).toFixed(2)}</span></li>`;
+          return `<li><span class="no">${i + 1}位</span><span class="t">${(s.cs / 100).toFixed(2)}s<small>${tag}</small></span><span class="g" style="--bg:${r.bg};--fg:${r.fg}">${esc(r.g)}</span><span class="e">±${(s.diff / 100).toFixed(2)}</span></li>`;
         }).join('')
       : `<li class="empty">${ranking ? 'まだ記録がありません' : '接続するとここに出ます'}</li>`;
   }
@@ -1129,7 +1140,7 @@
   shareBtn.addEventListener('click', () => {
     if (!lastResult) return;
     const r = lastResult;
-    const head = r.g === 'P' ? '【PERFECT】ぴったり11.11秒で止めた！' : `11.11秒チャレンジ ランク${r.g}`;
+    const head = r.diff === 0 ? '【PERFECT】ぴったり11.11秒で止めた！' : `11.11秒チャレンジ ランク${r.g}`;
     const text = `${head}\n記録 ${r.shown} 秒（誤差 ${(r.diff / 100).toFixed(2)} 秒）／${MODES[r.mode].name}・お邪魔${JAMA_LEVELS[r.jama].name}\n主催：${CFG.texts.store}${CFG.texts.org}\n#ポッキーの日 #1111`;
     window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(location.href), '_blank');
   });

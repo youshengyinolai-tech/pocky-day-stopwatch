@@ -42,11 +42,20 @@
   input:focus, textarea:focus, select:focus { outline: 2px solid var(--red); border-color: transparent; }
   textarea { min-height: 150px; font-family: var(--mono); font-size: 13px; line-height: 1.7; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 14px; }
-  .rank-row { display: grid; grid-template-columns: 44px 1fr 120px; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
-  .rank-row .g { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); background: var(--bg); color: var(--fg); }
-  .rank-row .sec { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 13px; }
+  .rank-row { display: grid; grid-template-columns: 40px 64px minmax(110px, 1fr) 200px; gap: 8px 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .rank-row .g { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); font-size: 14px; background: var(--bg); color: var(--fg); }
+  .rank-row .sec { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
   .rank-row .sec input { text-align: right; }
-  .range { font-family: var(--mono); font-size: 12px; opacity: .65; grid-column: 2 / -1; margin-top: -4px; }
+  .rank-row .opts { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .rank-row .opts select { width: auto; flex: 1; min-width: 120px; }
+  .rank-row .opts .move { display: flex; gap: 4px; }
+  .range { font-family: var(--mono); font-size: 12px; opacity: .65; grid-column: 2 / -1; }
+  .range.bad { color: var(--red); opacity: 1; font-weight: 700; }
+  .add { margin-top: 14px; }
+  @media (max-width: 560px) { .rank-row { grid-template-columns: 40px 56px 1fr; } .rank-row .sec { grid-column: 2 / -1; } }
+  .types td { white-space: normal; }
+  .types select { width: auto; }
+  .types input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--red); }
   .bar { position: sticky; bottom: 0; background: var(--cream); padding: 12px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-top: 2px solid var(--ink); }
   .bar .msg { font-size: 13px; }
   .bar .msg.ok { color: var(--green); font-weight: 700; }
@@ -120,13 +129,28 @@
 
     <section id="tab-ranks">
       <div class="card">
-        <h2>判定の範囲</h2>
-        <p class="note">11.11 秒からのズレ（秒）。早くても遅くても同じ扱いです。表示名も変えられます。</p>
+        <h2>判定の段階</h2>
+        <p class="note">上から順に、11.11 秒からのズレ（秒）で判定します。早くても遅くても同じ扱いです。0 秒にすると「ぴったりのみ」。最後の段階は「それ以外すべて」です。</p>
         <div id="rankRows"></div>
+        <button class="add" id="addRank">＋ 判定を追加</button>
       </div>
     </section>
 
     <section id="tab-jama">
+      <div class="card">
+        <h2>お邪魔が出るタイミング</h2>
+        <p class="note">GO! からの秒数で決めます。お邪魔はチョコでタイムが隠れてから出ます（ふつうは 3 秒後、鬼はすぐ）。</p>
+        <div class="grid">
+          <div><label for="jFrom">何秒から出す</label><input type="number" step="0.1" min="0" id="jFrom" placeholder="0"></div>
+          <div><label for="jTo">何秒以降は出さない（空欄なら最後まで）</label><input type="number" step="0.1" min="0" id="jTo" placeholder="制限なし"></div>
+          <div><label for="jDouble">「地獄」で 2 つ同時に出る確率（%）</label><input type="number" step="1" min="0" max="100" id="jDouble"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>お邪魔の種類</h2>
+        <p class="note">オフにすると出なくなります。出やすさは 1〜5（数字が大きいほどよく出る）。</p>
+        <div class="table-wrap"><table class="types"><thead><tr><th>出す</th><th>種類</th><th>出やすさ</th></tr></thead><tbody id="typeRows"></tbody></table></div>
+      </div>
       <div class="card">
         <h2>お邪魔の頻度</h2>
         <p class="note">次のお邪魔が出るまでの間隔（秒）。この範囲からランダムに選ばれます。短いほど激しくなります。</p>
@@ -180,10 +204,7 @@
   const D = window.POCKY_DEFAULTS;
   const $ = id => document.getElementById(id);
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const RANK_STYLE = {
-    P: ['#f2c14e', '#2b100a'], S: ['#2b100a', '#f2c14e'], A: ['#fff1dc', '#b8141f'],
-    B: ['#fff1dc', '#4b2317'], C: ['#f3dcb8', '#4b2317'], D: ['#7d0b14', '#fff1dc'],
-  };
+  const COLORS = window.POCKY_RANK_COLORS, EFFECTS = window.POCKY_EFFECTS, TYPES = window.POCKY_JAMA_TYPES;
   const MODE = { normal: 'ふつう', oni: '鬼' };
   const JAMA = ['なし', 'あり', '地獄'];
 
@@ -272,8 +293,7 @@
     }, e => { $('rows').innerHTML = `<tr><td colspan="8">読み込めませんでした：${esc(e.code)}</td></tr>`; }));
   }
   function gradeOf(diff) {
-    const r = currentRanks();
-    return (r.find(x => x.g === 'P' ? diff === 0 : x.g === 'D' || diff <= x.max)).g;
+    return ranks.find((r, i) => i === ranks.length - 1 || diff <= r.max) || { g: '?', color: 'cream' };
   }
   function renderScores() {
     const m = $('fMode').value, sort = $('fSort').value;
@@ -282,9 +302,9 @@
     $('count').textContent = `${list.length} 件`;
     const fmt = d => `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
     $('rows').innerHTML = list.length ? list.map((s, i) => {
-      const g = gradeOf(s.diff), [bg, fg] = RANK_STYLE[g];
+      const r = gradeOf(s.diff), { bg, fg } = COLORS[r.color];
       return `<tr><td class="num">${sort === 'diff' ? i + 1 : ''}</td><td>${fmt(s.at)}</td><td class="num">${(s.cs / 100).toFixed(2)}</td><td class="num">±${(s.diff / 100).toFixed(2)}</td>
-        <td><span class="pill" style="--bg:${bg};--fg:${fg}">${g}</span></td><td>${MODE[s.mode] || esc(s.mode)}</td><td>${JAMA[s.jama] ?? ''}</td>
+        <td><span class="pill" style="--bg:${bg};--fg:${fg}">${esc(r.g)}</span></td><td>${MODE[s.mode] || esc(s.mode)}</td><td>${JAMA[s.jama] ?? ''}</td>
         <td><button class="small danger" data-del="${esc(s.id)}">削除</button></td></tr>`;
     }).join('') : '<tr><td colspan="8" style="text-align:center;opacity:.6;padding:20px">記録はまだありません</td></tr>';
   }
@@ -317,39 +337,98 @@
   };
 
   // ---------- 設定 ----------
-  $('rankRows').innerHTML = D.ranks.map(r => {
-    const [bg, fg] = RANK_STYLE[r.g];
-    const sec = r.g === 'P' ? '<span>ぴったりのみ</span>'
-      : r.g === 'D' ? '<span>それ以外</span>'
-      : `<span>±</span><input type="number" step="0.01" min="0" id="max-${r.g}"><span>秒</span>`;
-    return `<div class="rank-row"><span class="g" style="--bg:${bg};--fg:${fg}">${r.g}</span><input id="label-${r.g}" aria-label="${r.g} の表示名"><span class="sec">${sec}</span><span class="range" id="range-${r.g}"></span></div>`;
-  }).join('');
-
-  function currentRanks() {
-    return D.ranks.map(r => ({ g: r.g, label: $('label-' + r.g).value.trim() || r.label, max: r.max === undefined ? undefined : Math.round(parseFloat($('max-' + r.g).value) * 100) }));
+  // 判定の段階（max は 1/100 秒。最後の段階の max は使わない）
+  let ranks = [];
+  const t2 = cs => (cs / 100).toFixed(2);
+  const opt = (obj, cur) => Object.entries(obj).map(([k, v]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(typeof v === 'string' ? v : v.name)}</option>`).join('');
+  function renderRanks() {
+    $('rankRows').innerHTML = ranks.map((r, i) => {
+      const last = i === ranks.length - 1, c = COLORS[r.color];
+      const sec = last ? '<span>それ以外すべて</span>'
+        : `<span>±</span><input type="number" step="0.01" min="0" data-i="${i}" data-k="max" value="${Number.isFinite(r.max) ? t2(r.max) : ''}" aria-label="秒"><span>秒以内</span>`;
+      return `<div class="rank-row">
+        <span class="g" id="badge-${i}" style="--bg:${c.bg};--fg:${c.fg}">${esc(r.g)}</span>
+        <input data-i="${i}" data-k="g" value="${esc(r.g)}" maxlength="2" aria-label="文字">
+        <input data-i="${i}" data-k="label" value="${esc(r.label)}" placeholder="表示名" aria-label="表示名">
+        <span class="sec">${sec}</span>
+        <div class="opts">
+          <select data-i="${i}" data-k="color" aria-label="色">${opt(COLORS, r.color)}</select>
+          <select data-i="${i}" data-k="effect" aria-label="演出">${opt(EFFECTS, r.effect)}</select>
+          <span class="move">
+            <button class="small" data-act="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
+            <button class="small" data-act="down" data-i="${i}" ${last ? 'disabled' : ''} aria-label="下へ">↓</button>
+            <button class="small danger" data-act="del" data-i="${i}" ${ranks.length <= 2 ? 'disabled' : ''}>削除</button>
+          </span>
+        </div>
+        <span class="range" id="range-${i}"></span>
+      </div>`;
+    }).join('');
+    $('addRank').disabled = ranks.length >= 12;
+    renderRanges();
   }
+  // 各段階が実際にどのタイムになるか
   function renderRanges() {
-    const rs = currentRanks();
-    const t = cs => (cs / 100).toFixed(2);
-    let prev = 0;
-    rs.forEach(r => {
-      let txt;
-      if (r.g === 'P') txt = '11.11';
-      else if (r.g === 'D') txt = `${t(1111 - prev - 1)} 以下 / ${t(1111 + prev + 1)} 以上`;
-      else if (!Number.isFinite(r.max) || r.max < prev) txt = '⚠ 上の判定より大きい値にしてください';
-      else { txt = `${t(1111 - r.max)} 〜 ${t(1111 + r.max)}`; prev = r.max; }
-      $('range-' + r.g).textContent = txt;
+    let prev = -1;
+    ranks.forEach((r, i) => {
+      const el = $('range-' + i), last = i === ranks.length - 1;
+      let txt, bad = false;
+      if (last) txt = prev < 0 ? 'すべて' : `${t2(1111 - prev - 1)} 以下 / ${t2(1111 + prev + 1)} 以上`;
+      else if (!Number.isFinite(r.max) || r.max <= prev) { txt = '⚠ 上の段階より大きい秒数にしてください'; bad = true; }
+      else if (r.max === 0) { txt = '11.11 ぴったり'; prev = 0; }
+      else { txt = prev < 0 ? `${t2(1111 - r.max)} 〜 ${t2(1111 + r.max)}` : `${t2(1111 - r.max)} 〜 ${t2(1111 - prev - 1)} / ${t2(1111 + prev + 1)} 〜 ${t2(1111 + r.max)}`; prev = r.max; }
+      el.textContent = txt; el.classList.toggle('bad', bad);
     });
   }
-  $('rankRows').oninput = () => { renderRanges(); renderScores(); dirty(); };
+  $('rankRows').addEventListener('input', e => {
+    const { i, k } = e.target.dataset;
+    if (i === undefined || !k) return;
+    const r = ranks[+i];
+    if (k === 'max') r.max = Math.round(parseFloat(e.target.value) * 100);
+    else r[k] = e.target.value;
+    if (k === 'g' || k === 'color') {
+      const b = $('badge-' + i), c = COLORS[r.color];
+      b.textContent = r.g; b.style.setProperty('--bg', c.bg); b.style.setProperty('--fg', c.fg);
+    }
+    renderRanges(); renderScores(); dirty();
+  });
+  $('rankRows').addEventListener('change', e => { if (e.target.tagName === 'SELECT') e.target.dispatchEvent(new Event('input', { bubbles: true })); });
+  $('rankRows').addEventListener('click', e => {
+    const { act, i } = e.target.dataset;
+    if (!act) return;
+    const n = +i;
+    if (act === 'del') ranks.splice(n, 1);
+    else {
+      const m = act === 'up' ? n - 1 : n + 1;
+      // 秒数ごと入れ替える。順番がおかしくなったら ⚠ が出るので直してもらう
+      [ranks[n], ranks[m]] = [ranks[m], ranks[n]];
+    }
+    renderRanks(); renderScores(); dirty();
+  });
+  $('addRank').onclick = () => {
+    const before = ranks[ranks.length - 2];
+    const base = before && Number.isFinite(before.max) ? before.max : 0;
+    ranks.splice(ranks.length - 1, 0, { g: '?', label: '', max: base + 50, color: 'cream', effect: 'meh' });
+    renderRanks(); renderScores(); dirty();
+  };
+
+  // お邪魔の種類
+  function renderTypes(types) {
+    $('typeRows').innerHTML = Object.entries(TYPES).map(([k, name]) => `<tr>
+      <td><input type="checkbox" data-type="${k}" ${types[k].on ? 'checked' : ''} aria-label="${esc(name)}"></td>
+      <td>${esc(name)}</td>
+      <td><select data-weight="${k}" aria-label="${esc(name)} の出やすさ">${[1, 2, 3, 4, 5].map(w => `<option${w === Math.max(1, types[k].weight) ? ' selected' : ''}>${w}</option>`).join('')}</select></td>
+    </tr>`).join('');
+  }
 
   const lines = v => v.split('\n').map(s => s.trim()).filter(Boolean);
   function fillForm(raw) {
     const c = window.mergePockyConfig(raw);
-    c.ranks.forEach(r => {
-      $('label-' + r.g).value = r.label;
-      if (r.max !== undefined) $('max-' + r.g).value = (r.max / 100).toFixed(2);
-    });
+    ranks = c.ranks.map(r => ({ ...r }));
+    renderRanks();
+    $('jFrom').value = c.jama.from / 1000;
+    $('jTo').value = c.jama.to ? c.jama.to / 1000 : '';
+    $('jDouble').value = c.jama.double;
+    renderTypes(c.jama.types);
     $('jnMin').value = c.jama.normal.min / 1000; $('jnMax').value = c.jama.normal.max / 1000;
     $('jhMin').value = c.jama.hell.min / 1000;   $('jhMax').value = c.jama.hell.max / 1000;
     $('toasts').value = c.toasts.map(x => [x.icon, x.app, x.from, x.body, x.color].join(' | ')).join('\n');
@@ -357,15 +436,27 @@
     $('announce').value = c.announce.join('\n');
     $('tTitle').value = c.texts.title; $('tStore').value = c.texts.store;
     $('tOrg').value = c.texts.org; $('tNotice').value = c.texts.notice;
-    renderRanges();
     renderScores();
   }
   function readForm() {
     const ms = id => Math.round(parseFloat($(id).value) * 1000);
     return {
       texts: { title: $('tTitle').value.trim(), store: $('tStore').value.trim(), org: $('tOrg').value.trim(), notice: $('tNotice').value.trim() },
-      ranks: currentRanks().map(r => r.max === undefined ? { g: r.g, label: r.label } : r),
-      jama: { normal: { min: ms('jnMin'), max: ms('jnMax') }, hell: { min: ms('jhMin'), max: ms('jhMax') } },
+      ranks: ranks.map((r, i) => {
+        const o = { g: r.g.trim(), label: r.label.trim(), color: r.color, effect: r.effect };
+        if (i < ranks.length - 1) o.max = r.max;
+        return o;
+      }),
+      jama: {
+        normal: { min: ms('jnMin'), max: ms('jnMax') }, hell: { min: ms('jhMin'), max: ms('jhMax') },
+        from: $('jFrom').value === '' ? 0 : ms('jFrom'),
+        to: $('jTo').value === '' ? 0 : ms('jTo'),
+        double: Math.round(parseFloat($('jDouble').value)),
+        types: Object.fromEntries(Object.keys(TYPES).map(k => [k, {
+          on: document.querySelector(`[data-type="${k}"]`).checked,
+          weight: +document.querySelector(`[data-weight="${k}"]`).value,
+        }])),
+      },
       toasts: lines($('toasts').value).map(l => {
         const p = l.split('|').map(s => s.trim());
         if (p.length < 4) return null;
@@ -376,12 +467,17 @@
     };
   }
   function validate(c) {
-    let prev = 0;
+    let prev = -1;
     for (const r of c.ranks) {
+      if (!r.g) return '判定の文字が空の段階があります';
       if (r.max === undefined) continue;
-      if (!Number.isFinite(r.max) || r.max < prev) return `判定 ${r.g} の秒数が正しくありません（上の判定以上の値に）`;
+      if (!Number.isFinite(r.max) || r.max <= prev || r.max > 9999) return `判定「${r.g}」の秒数が正しくありません（上の段階より大きい値に）`;
       prev = r.max;
     }
+    const { from, to, double } = c.jama;
+    if (!(from >= 0 && from <= 60000)) return '「何秒から出す」は 0〜60 秒にしてください';
+    if (!(to >= 0 && to <= 60000) || (to && to <= from)) return '「何秒以降は出さない」は「何秒から出す」より後にしてください';
+    if (!(double >= 0 && double <= 100)) return '同時に出る確率は 0〜100 にしてください';
     for (const [k, n] of [['normal', '「あり」'], ['hell', '「地獄」']]) {
       const { min, max } = c.jama[k];
       if (!(min >= 100 && max >= min && max <= 20000)) return `${n}の間隔は 0.1〜20 秒で、最短 ≦ 最長にしてください`;
@@ -396,7 +492,7 @@
   let isDirty = false;
   function dirty() { isDirty = true; msg('未保存の変更があります', ''); }
   function msg(t, cls) { $('saveMsg').textContent = t; $('saveMsg').className = 'msg ' + cls; }
-  document.querySelectorAll('#tab-jama input, #tab-jama textarea, #tab-texts input, #tab-texts textarea').forEach(el => el.addEventListener('input', dirty));
+  ['tab-jama', 'tab-texts'].forEach(id => ['input', 'change'].forEach(ev => $(id).addEventListener(ev, dirty)));
   window.addEventListener('beforeunload', e => { if (isDirty) e.preventDefault(); });
 
   function startConfig() {

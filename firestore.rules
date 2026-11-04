@@ -27,7 +27,7 @@ service cloud.firestore {
       allow create: if request.resource.data.keys().hasOnly(['cs', 'diff', 'g', 'mode', 'jama', 'at'])
         && request.resource.data.cs is int && request.resource.data.cs >= 0 && request.resource.data.cs < 100000
         && request.resource.data.diff == math.abs(request.resource.data.cs - 1111)
-        && request.resource.data.g in ['P', 'S', 'A', 'B', 'C', 'D']
+        && request.resource.data.g is string && request.resource.data.g.size() >= 1 && request.resource.data.g.size() <= 2
         && request.resource.data.mode in ['normal', 'oni']
         && request.resource.data.jama in [0, 1, 2]
         && request.resource.data.at == request.time;
