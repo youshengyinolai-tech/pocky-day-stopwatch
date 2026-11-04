@@ -507,8 +507,8 @@
   </aside>
 </div>
 
-<script src="defaults.js?v=202611041222"></script>
-<script src="firebase-config.js?v=202611041222"></script>
+<script src="defaults.js?v=202611041226"></script>
+<script src="firebase-config.js?v=202611041226"></script>
 <script>
   const TARGET_CS = 1111; // 11.11秒（センチ秒）
   const MODES = {
@@ -653,12 +653,9 @@
     cue.classList.remove('show'); void cue.offsetWidth; cue.classList.add('show');
   }
   function bump(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
-  // spawnKey: いま出しているお邪魔の種類。時間帯の終わりにまとめて片付けるための印
-  let spawnKey = '';
   function spawn(cls, html, parent = jamaEl, life = 2000) {
     const el = document.createElement('div');
     el.className = cls; if (html !== undefined) el.innerHTML = html;
-    if (spawnKey) el.dataset.k = spawnKey;
     parent.appendChild(el);
     setTimeout(() => el.remove(), life);
     return el;
@@ -738,13 +735,11 @@
       for (let i = 0; i < n; i++) {
         jamaTimers.push(setTimeout(() => {
           if (!jamaOn('regi')) return;
-          spawnKey = 'regi';
           sfx.scan();
           spawn('j-scan', '', jamaEl, 400);
-          if (!o.prices.length && !o.item) return spawnKey = '';
+          if (!o.prices.length && !o.item) return;
           const el = spawn('j-price', `${o.item ? `<small>${esc(o.item)}</small>` : ''}${esc(o.prices.length ? pick(o.prices) : '')}`, jamaEl, 1000);
           el.style.left = rand(8, 78) + '%'; el.style.top = rand(12, 72) + '%'; el.style.rotate = rand(-8, 8) + 'deg';
-          spawnKey = '';
         }, i * interval * 1000));
       }
     },
@@ -824,23 +819,6 @@
     return t >= from && t < to;
   }
   const jamaOn = k => jamaActive && inWindow(k);
-  // 時間帯の終わり（GO からのミリ秒）。0 なら最後まで
-  function windowEnd(k) {
-    const o = T(k);
-    return o.to !== null ? o.to * 1000 : CFG.jama.to;
-  }
-  // お邪魔を 1 つ出す。時間帯の終わりが来たら、表示中でもその種類をすぐ片付ける
-  function runJama(k) {
-    spawnKey = k;
-    try { JAMA[k](); } finally { spawnKey = ''; }
-    const end = windowEnd(k);
-    if (!previewing && end) jamaTimers.push(setTimeout(() => clearJama(k), Math.max(0, end - jamaElapsed())));
-  }
-  function clearJama(k) {
-    stage.querySelectorAll(`[data-k="${k}"]`).forEach(e => e.remove());
-    if (k === 'warp') center.classList.remove('j-tilt', 'j-zoom', 'j-blur', 'j-flip');
-    if (k === 'fakeStop') cue.classList.remove('show');
-  }
   // いま出してよい種類から、出やすさの重みで選ぶ（同じものは続けない）
   function pickJama(keys) {
     const t = jamaElapsed();
@@ -855,10 +833,10 @@
       const k = pickJama(JAMA_KEYS);
       if (k) {
         lastJama = k;
-        runJama(k);
+        JAMA[k]();
         if (data.jama === 2 && Math.random() * 100 < CFG.jama.double) {
           const k2 = pickJama(JAMA_KEYS.filter(x => T(x).pair));
-          if (k2) runJama(k2);
+          if (k2) JAMA[k2]();
         }
       }
       const lv = JAMA_LEVELS[data.jama];
@@ -1228,6 +1206,6 @@
   renderStats();
   resetSticks();
 </script>
-<script type="module" src="sync.js?v=202611041222"></script>
+<script type="module" src="sync.js?v=202611041226"></script>
 </body>
 </html>
