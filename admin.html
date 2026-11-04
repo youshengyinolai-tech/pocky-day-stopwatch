@@ -277,8 +277,8 @@
   <p class="pvnote">まだ保存されていません。見た目と動きの確認用です。音が出ないときは、プレビュー画面を一度タップしてください。ここで遊んだ記録はランキングに送られません。</p>
 </div>
 
-<script src="defaults.js?v=202611041146"></script>
-<script src="firebase-config.js?v=202611041146"></script>
+<script src="defaults.js?v=202611041222"></script>
+<script src="firebase-config.js?v=202611041222"></script>
 <script type="module">
   const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
   const D = window.POCKY_DEFAULTS;
@@ -733,7 +733,7 @@
     for (const [k, T] of Object.entries(TYPES)) {
       const t = types[k];
       if (t.from !== null && !ok(t.from, 0, 60)) return fail(k, 'window', '時間帯は 0〜60 秒にしてください');
-      if (t.to !== null && (!ok(t.to, 0, 60) || (t.from !== null && t.to <= t.from))) return fail(k, 'window', '時間帯の「まで」は「から」より後にしてください');
+      if (t.to !== null && (!ok(t.to, 0.1, 60) || (t.from !== null && t.to <= t.from))) return fail(k, 'window', '時間帯の「まで」は 0.1〜60 秒で、「から」より後にしてください');
       for (const f of T.fields) {
         const v = t[f.k], range = `${f.lo}〜${f.hi}${f.unit || ''}`;
         if (f.kind === 'num' && !ok(v, f.lo, f.hi)) return fail(k, f.k, `${f.label}は ${range} にしてください`);
